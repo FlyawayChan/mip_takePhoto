@@ -1,0 +1,16 @@
+<!--index.wxml-->
+<view>姓名：{{userName}}</view>
+<view>年龄：{{age}}</view>
+<view wx:if="{{age > 17}}">您可以进入酒吧</view>
+<view class="row" wx:for="{{[1,2,3,4,5]}}" wx:for-item="row">
+    <view class="col" wx:for="{{[1,2,3,4,5]}}" wx:for-item="col">
+        <view wx:if="{{col <= row}}">
+            {{col}}*{{row}} = {{col*row}}
+        </view>
+    </view>
+</view>
+<view wx:for="{{lists}}" wx:key="id">
+    <switch>{{item.name}}</switch>
+</view>
+<button bindtap="tapEvent">更新</button>
+<view wx:for="{{[1,2,3]}}">{{item}}</view>

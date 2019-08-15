@@ -1,0 +1,33 @@
+/* pages/shopmap/shopmap.wxss */
+page{
+    height:100%
+}
+.shop-container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    justify-content: center;
+    background: bisque; 
+}
+.view1{
+    width: 128rpx;
+    height: 128rpx;
+    background-color: red;
+}
+.view2{
+    width: 128rpx;
+    height: 128rpx;
+    background-color: rebeccapurple;
+}
+.view3{
+    width: 128rpx;
+    height: 128rpx;
+    background-color: royalblue;
+}
+.view4{
+    width: 128rpx;
+    height: 128rpx;
+    background-color: palevioletred;
+}

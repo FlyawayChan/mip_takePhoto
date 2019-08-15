@@ -1,0 +1,32 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/logs/logs",
+    "pages/shopmap/shopmap"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#ccc",
+    "navigationBarTitleText": "RunToo",
+    "navigationBarTextStyle": "black",
+    "backgroundColor":"#eeeeee",
+    "enablePullDownRefresh":true
+  },
+  "tabBar":{
+      "list":[
+          {
+              "text":"首页",
+              "pagePath":"pages/index/index"
+          },
+          {
+              "text":"商场",
+              "pagePath": "pages/shopmap/shopmap"
+          },
+          {
+              "text":"我",
+              "pagePath": "pages/shopmap/shopmap"
+          }
+      ]
+  },
+  "sitemapLocation": "sitemap.json"
+}
