@@ -3,7 +3,7 @@
 <view>年龄：{{age}}</view>
 <view wx:if="{{age > 17}}">您可以进入酒吧</view>
 <view class="row" wx:for="{{[1,2,3,4,5]}}" wx:for-item="row">
-    <view class="col" wx:for="{{[1,2,3,4,5]}}" wx:for-item="col">
+    <view class="col" wx:for="{{[1,2,3,4,5]}}" wx:for-item="col" >
         <view wx:if="{{col <= row}}">
             {{col}}*{{row}} = {{col*row}}
         </view>

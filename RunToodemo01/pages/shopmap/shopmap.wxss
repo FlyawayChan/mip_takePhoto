@@ -31,3 +31,9 @@ page{
     height: 128rpx;
     background-color: palevioletred;
 }
+
+.other{
+    position: relative;
+    top: 30rpx;
+    left: 50rpx;
+}

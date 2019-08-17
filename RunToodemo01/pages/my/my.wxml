@@ -1,0 +1,8 @@
+<!--pages/my/my.wxml-->
+<view class="imgbox">
+    <view class="imgline" wx:for="{{imgData}}" wx:key="{{no}}">
+        <image src="{{item.src}}"></image>
+        <icon type="cancel" color='red' size='16' class='cancelI'></icon>
+        <text class='item_txt'>图片编号{{item.no}}</text>
+    </view> 
+</view>
