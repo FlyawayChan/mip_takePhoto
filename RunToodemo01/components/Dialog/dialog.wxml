@@ -6,7 +6,7 @@
           <view class="wx-alert-content">{{content}}</view>
           <view class="wx-alert-footer">
               <view class="wx-alert-btn" catchtap="_cancelEvent">{{cancelText}}</view>
-              <view class="wx-alert-btn" catchtap="_confirmEvent">{{confirmEvent}}</view>
+              <view class="wx-alert-btn" catchtap="_confirmEvent">{{confirmText}}</view>
           </view>
       </view>
     </view>

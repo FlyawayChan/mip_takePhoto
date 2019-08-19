@@ -31,5 +31,23 @@ Page({
       this.setData({//3、记住要使用this.setData来刷新数据
           lists:lists
       });
+  },
+
+  onReady:function(){
+    this.dialog = this.selectComponent("#alertview") 
+  },
+
+  clickMe:function(){
+    this.dialog.showAlertView();
+  },
+
+  cancelEvent:function(){
+    this.dialog.hideAlertView();
+    console.log('点击取消');
+  },
+
+  confirmEvent:function(){
+    this.dialog.hideAlertView;
+    console.log('点击确定')
   }
 })

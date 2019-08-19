@@ -1,4 +1,8 @@
 {
   "usingComponents": {},
-  "navigationBarTitleText":"首页"
+  "navigationBarTitleText":"首页",
+
+  "usingComponents":{
+    "dialog":"../components/Dialog/dialog"
+  }
 }
