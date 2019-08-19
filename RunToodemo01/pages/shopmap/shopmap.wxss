@@ -33,7 +33,7 @@ page{
 }
 
 .other{
-    position: relative;
+    position: absolute;
     top: 30rpx;
     left: 50rpx;
 }

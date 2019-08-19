@@ -1,1 +1,32 @@
 /* components/Dialog/dialog.wxss */
+.wx-mask-view{
+  position: fixed;/* 即固定于视窗 */
+  z-index: 1000;
+  top: 0;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  background: rgb(0,0,0,0.4);
+}
+.wx-alertview{
+  position: fixed;
+  z-index: 2000;
+  width: 80%;
+  max-width: 580rpx;
+  top: 50%;
+  right: 50%;
+  -webkit-transform: translate(-50%,-50%);
+  transform: translate(-50%,-50%);
+  background-color: #fff;
+  text-align: center;
+  border-radius: 4rpx;
+  overflow: hidden; 
+}
+.wx-alert-title{}
+.wx-alert-content{}
+.wx-alert-footer{}
+.wx-alert-footer::before{}
+.wx-alert-btn{}
+.wx-alert-footer .wx-alert-btn:nth-of-type(1){}
+.wx-alert-footer .wx-alert-btn:nth-of-type(2){}
+.wx-alert-footer .wx-alert-btn:nth-of-type(2)::after{}

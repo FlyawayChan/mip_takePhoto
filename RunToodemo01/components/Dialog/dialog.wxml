@@ -1,12 +1,13 @@
 <!--components/Dialog/dialog.wxml-->
-<view class="wx_dialog_container" hidden="{{isShow}}">
-    <view class="wx-mask"></view>
-    <view class="wx-dialog">
-        <view class="wx-dialog-title">{{title}}</view>
-        <view class="wx-dialog-content">{{content}}</view>
-        <view class="wx-dialog-footer">
-            <view class="wx-dialog-btn" catchtap="_cancelEvent">{{cancelText}}</view>
-            <view class="wx-dialog-btn" catchtap="_confirmEvent">{{confirmEvent}}</view>
-        </view>
+<view class="wx_alertview_container" hidden="{{isShow}}">
+    <view class="wx-mask-view">
+      <view class="wx-alertview">
+          <view class="wx-alert-title">{{title}}</view>
+          <view class="wx-alert-content">{{content}}</view>
+          <view class="wx-alert-footer">
+              <view class="wx-alert-btn" catchtap="_cancelEvent">{{cancelText}}</view>
+              <view class="wx-alert-btn" catchtap="_confirmEvent">{{confirmEvent}}</view>
+          </view>
+      </view>
     </view>
 </view>
