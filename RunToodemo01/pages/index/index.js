@@ -41,12 +41,12 @@ Page({
     this.dialog.showAlertView();
   },
 
-  cancelEvent:function(){
+  cancel:function(){
     this.dialog.hideAlertView();
     console.log('点击取消');
   },
 
-  confirmEvent:function(){
+  confirm:function(){
     this.dialog.hideAlertView();
     console.log('点击确定')
   }
