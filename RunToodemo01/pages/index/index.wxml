@@ -2,10 +2,14 @@
 <view class="container">
   <button class="clickbtn" type="primary" size="mini" bindtap="clickMe">点</button>
   <dialog id="alertview"
-          
+          title='标题'
+          content='内容'
+          cancelText='取消'
+          confirmText='确认'
           bind:cancelEvent='cancelEvent'
-          bind:confirmEvent='confirmEvent'>
-  </diglog>
+          bind:confirmEvent='confirmEvent'
+          />
+  
   <!-- <view>姓名：{{userName}}</view>
   <view>年龄：{{age}}</view>
   <view wx:if="{{age > 17}}">您可以进入酒吧</view>

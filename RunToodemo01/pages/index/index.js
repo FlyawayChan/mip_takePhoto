@@ -34,7 +34,7 @@ Page({
   },
 
   onReady:function(){
-    this.dialog = this.selectComponent("#alertview") 
+    this.dialog = this.selectComponent("#alertview")
   },
 
   clickMe:function(){
@@ -47,7 +47,7 @@ Page({
   },
 
   confirmEvent:function(){
-    this.dialog.hideAlertView;
+    this.dialog.hideAlertView();
     console.log('点击确定')
   }
 })

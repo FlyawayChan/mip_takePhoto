@@ -41,6 +41,11 @@ Component({
         isShow:!this.data.isShow
       })
     },
+    showAlertView(){
+      this.setData({
+        isShow:!this.data.isShow
+      })
+    },
     _cancelEvent(){
       this.triggerEvent("cancelEvent")
     },

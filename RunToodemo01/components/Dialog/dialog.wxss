@@ -1,4 +1,11 @@
 /* components/Dialog/dialog.wxss */
+/* .wx_alertview_container{
+  position: fixed;
+  top: 0;
+  
+  left: 50rpx;
+} */
+
 .wx-mask-view{
   position: fixed;/* 即固定于视窗 */
   z-index: 1000;
