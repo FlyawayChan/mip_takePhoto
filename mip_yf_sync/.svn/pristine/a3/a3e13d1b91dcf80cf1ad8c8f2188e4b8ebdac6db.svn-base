@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+    "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="com.mip.common.auth.roleJob">
+	<select id="getAllData" parameterType="map" resultType="datarecord">
+        select distinct a.*,b.client_id,b.name role_name
+        from YD_CORE.MIP_ROLE_JOB a
+        left join YD_CORE.MIP_AUTH_ROLE b on a.role_id = b.id
+        order by a.role_id
+	</select>
+
+	<insert id="insertRoleJob" parameterType="map">
+		insert into YD_CORE.MIP_USER_JOB a
+	    select 100000000000000+1000*YD_CORE.IBATIS_SEQUENCE.NEXTVAL+trunc(dbms_random.value(100,999)),a.id,d.id,#{taskName} taskname,job_content,
+	    to_date(#{beginTime},'yyyy-mm-dd hh24:mi:ss'),to_date(#{endTime},'yyyy-mm-dd hh24:mi:ss'),sysdate,a.remark,1,#{clientId}
+	    from YD_CORE.MIP_ROLE_JOB a
+	    left join YD_CORE.MIP_AUTH_ROLE b on a.role_id = b.id
+	    inner join YD_CORE.MIP_AUTH_ROLE_RELATED_ENTITIE c on c.role_id = b.id
+	    AND c.RELATED_TABLE = 'MIP_ORG_USER'
+	    inner join YD_CORE.MIP_ORG_USER d on c.related_id = d.id
+	    where b.client_id = #{clientId}
+	    and a.id = #{roleJobId}
+	</insert>
+</mapper>

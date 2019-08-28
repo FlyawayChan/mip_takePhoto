@@ -1,0 +1,250 @@
+package com.mip.biz.oms.pqmManage.pqmQuartz.service.impl;
+
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.log4j.Logger;
+
+import com.mip.biz.oms.pqmManage.pqmQuartz.service.PqmQuartzService;
+import com.mip.core.basebiz.dto.DataRecord;
+import com.mip.core.basebiz.dto.limit.Limit;
+import com.mip.core.basebiz.service.impl.BizServiceImpl;
+import com.mip.core.loginerinfo.LoginerUtils;
+import com.mip.core.util.DateUtil;
+
+public class PqmQuartzServiceImpl extends BizServiceImpl implements PqmQuartzService {
+	private Logger logger=Logger.getLogger(PqmQuartzServiceImpl.class);
+    /* 以下成员变量表示电压等级 */
+    public final static Integer PW110K = 110000;
+    public final static Integer PW35K = 35000;
+    public final static Integer PW10K = 10000;
+    public final static Integer PW380 = 380;
+    public final static Integer PW220 = 220;
+    public final static Integer MINUTE = 15; // 表示周期为15分钟（周期）
+    public final static double KV = 1000.0d; // 表示千伏
+
+    @Override
+    public void calcDayPqmData() throws Exception {
+    	logger.info("calcDayPqmData开始时间："+DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss"));
+        String dateType = "day";
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+        calendar.add(Calendar.DAY_OF_MONTH, -1);
+        String searchTime = DateUtil.format(calendar.getTime(), "yyyy-MM-dd");// 得到当前时间的前一天的时间
+        List<DataRecord> drList = this.getDayPqmData(dateType, searchTime);
+
+        List<DataRecord> newList = calcPeriodData(drList);
+        for (int i = 0; newList != null && i < newList.size(); i++) {
+            this.insertPqmData(dateType, newList.get(i));
+        }
+        logger.info("calcDayPqmData结束时间："+DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss"));
+    }
+
+    @Override
+    public void calcMonthPqmData() throws Exception {
+    	logger.info("calcMonthPqmData开始时间："+DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss"));
+        String dateType = "month";
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+        calendar.add(Calendar.MONTH, -1);
+        String searchTime = DateUtil.format(calendar.getTime(), "yyyy-MM");// 得到当前时间的前一个月的时间
+        List<DataRecord> drList = this.getDayPqmData(dateType, searchTime);
+
+        List<DataRecord> newList = calcPeriodData(drList);
+        for (int i = 0; newList != null && i < newList.size(); i++) {
+            this.insertPqmData(dateType, newList.get(i));
+        }
+        logger.info("calcMonthPqmData结束时间："+DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss"));
+    }
+
+    // 根据参数查询电能质量原始周期记录
+    private List<DataRecord> getDayPqmData(String dateType, String searchTime) throws Exception {
+        String str = "";
+        if ("day".equals(dateType)) {
+            str = "getDay";
+        } else if ("month".equals(dateType)) {
+            str = "getMonth";
+        } else {
+            str = "getDay";
+        }
+        Limit limit = Limit.createStatementLimit(SQLMAP_PACKAGE + str + "PqmData");
+
+        limit.setParameter("clientId", LoginerUtils.getLoginer().getClientId());
+        limit.setParameter("searchTime", searchTime);
+        return this.getDao().queryForDataSet(limit).getResults();
+    }
+
+    // 封装并计算周期记录数据
+    @SuppressWarnings("unchecked")
+    private List<DataRecord> calcPeriodData(List<DataRecord> drList) {
+        List<DataRecord> newList = new ArrayList<DataRecord>();
+        if (drList != null && !drList.isEmpty()) {
+            for (DataRecord dr : drList) {
+                List<Integer> list = null; // 用于存放 0：colA下限、1：colA上限、2：colB下限、3：colB上限、4：colC下限、5：colC上限、6：1表示合格、0表示不合格
+                double volA = dr.getDouble("VOL_A");
+                double volB = dr.getDouble("VOL_B");
+                double volC = dr.getDouble("VOL_C");
+                Integer monitorPeriod = 0; // 监测周期
+                if (dr.getDouble("MONITOR_PERIOD") != null && !"".equals(dr.getDouble("MONITOR_PERIOD"))) {
+                    monitorPeriod = dr.getInteger("MONITOR_PERIOD");
+                } else {
+                    monitorPeriod = MINUTE;
+                }
+                if (PW110K.equals(dr.getInteger("V"))) { // 110kV电压
+                    double pw110k = PW110K / KV;
+                    list = this.getCount(volA, volB, volC, pw110k, monitorPeriod, 0.07, 0.07);
+                } else if (PW35K.equals(dr.getInteger("V"))) { // 35kV电压
+                    double pw35k = PW35K / KV;
+                    list = this.getCount(volA, volB, volC, pw35k, monitorPeriod, 0.07, 0.07);
+                } else if (PW10K.equals(dr.getInteger("V"))) { // 10kV电压
+                    double pw10k = PW10K / KV;
+                    list = this.getCount(volA, volB, volC, pw10k, monitorPeriod, 0.07, 0.07);
+                } else if (PW380.equals(dr.getInteger("V"))) { // 380V电压
+                    double pw380k = PW380 / KV;
+                    list = this.getCount(volA, volB, volC, pw380k, monitorPeriod, 0.1, 0.05);
+                } else if (PW220.equals(dr.getString("V"))) { // 220V电压
+                    double pw220 = PW220 / KV;
+                    list = this.getCount(volA, volB, volC, pw220, monitorPeriod, 0.1, 0.05);
+                }
+                String monitorNodeId = dr.getString("MONITOR_NODE_ID");
+                if (newList == null || newList.isEmpty()) {
+                    dr.put("volUpperLower", list);
+                    dr.put("passCount", list.get(list.size() - 1));
+                    dr.put("total", 1);
+                    newList.add(dr);
+                } else {
+                    for (int i = 0; i < newList.size(); i++) {
+                        DataRecord current = newList.get(i);
+                        if (monitorNodeId.equals(current.getString("MONITOR_NODE_ID"))) {
+                            List<Integer> volList = (List<Integer>) current.get("volUpperLower");
+                            List<Integer> newVolList = new ArrayList<Integer>();
+                            for (int j = 0; j < volList.size(); j++) {
+                                newVolList.add(volList.get(j) + list.get(j));
+                            }
+                            dr.put("volUpperLower", newVolList);
+                            dr.put("passCount", current.getInteger("passCount") + list.get(list.size() - 1));
+                            dr.put("total", current.getInteger("total") + 1);
+                            newList.remove(i);
+                            newList.add(i, dr);
+                            break;
+                        }
+                        if (i == newList.size() - 1) {
+                            dr.put("volUpperLower", list);
+                            dr.put("passCount", list.get(list.size() - 1));
+                            dr.put("total", 1);
+                            newList.add(dr);
+                        }
+                    }
+                }
+            }
+        }
+        return newList;
+    }
+
+    // 计算电压上下限累计次数
+    /**
+     *
+     * @param volA
+     * @param volB
+     * @param volC
+     * @param pwLevel
+     *            单位：kV
+     * @param monitorPeriod
+     *            监测周期
+     * @param lower
+     * @param upper
+     * @return
+     */
+    private List<Integer> getCount(double volA, double volB, double volC, double pwLevel, Integer monitorPeriod, double lower, double upper) {
+        List<Integer> list = new ArrayList<Integer>();
+        for (int i = 0; i < 6; i++) {
+            list.add(0);
+        }
+        double devA = (volA - pwLevel) / pwLevel;
+        double devB = (volB - pwLevel) / pwLevel;
+        double devC = (volC - pwLevel) / pwLevel;
+        boolean isPass = true; // 是否为合格
+        if (devA < 0 && Math.abs(devA) > lower) { // A相偏差小于
+            list.remove(0);
+            list.add(0, monitorPeriod);
+            isPass = false;
+        } else if (devA > 0 && devA > upper) { // A相偏差大于
+            list.remove(1);
+            list.add(1, monitorPeriod);
+            isPass = false;
+        }
+        if (devB < 0 && Math.abs(devB) > lower) { // B相偏差小于
+            list.remove(2);
+            list.add(2, monitorPeriod);
+            isPass = false;
+        } else if (devB > 0 && devB > upper) { // B相偏差大于
+            list.remove(3);
+            list.add(3, monitorPeriod);
+            isPass = false;
+        }
+        if (devC < 0 && Math.abs(devC) > lower) { // C相偏差小于
+            list.remove(4);
+            list.add(4, monitorPeriod);
+            isPass = false;
+        } else if (devC > 0 && devC > upper) { // C相偏差大于
+            list.remove(5);
+            list.add(5, monitorPeriod);
+            isPass = false;
+        }
+        list.add(isPass ? 1 : 0); // 第7位表示是否合格
+        return list;
+    }
+
+    // 添加电能质量周期统计记录
+    @SuppressWarnings("unchecked")
+    private void insertPqmData(String dateType, DataRecord old) throws Exception {
+        String tableCode = "";
+        String statType = "";
+        String pattern = "";
+        if ("day".equals(dateType)) {
+            tableCode = "OMS_PQM_STAT_DAY";
+            statType = "STAT_DAY";
+            pattern = "yyyy-MM-dd";
+        } else if ("month".equals(dateType)) {
+            tableCode = "OMS_PQM_STAT_MONTH";
+            statType = "STAT_MONTH";
+            pattern = "yyyy-MM";
+        } else {
+            tableCode = "OMS_PQM_STAT_DAY";
+            statType = "STAT_DAY";
+            pattern = "yyyy-MM-dd";
+        }
+        DataRecord dr = new DataRecord();
+        dr.put("ID", this.generateId(null));
+        dr.put("MONITOR_NODE_ID", old.get("MONITOR_NODE_ID"));
+        dr.put("MONITOR_NODE_NAME", old.get("MONITOR_NODE_NAME"));
+        dr.put("MONITOR_ID", old.get("MONITOR_ID"));
+        dr.put("SENSOR_ID", old.get("SENSOR_ID"));
+        dr.put("CLIENT_ID", old.get("CLIENT_ID"));
+        dr.put(statType, DateUtil.parse(old.getString("MONITOR_TIME"), pattern));
+        dr.put("CREATE_TIME", new Date());
+
+        List<Integer> upperLowerList = (List<Integer>) old.get("volUpperLower");
+        dr.put("VOL_LOWER_LIMIT_TIME_A", upperLowerList.get(0));
+        dr.put("VOL_UPPER_LIMIT_TIME_A", upperLowerList.get(1));
+        dr.put("VOL_LOWER_LIMIT_TIME_B", upperLowerList.get(2));
+        dr.put("VOL_UPPER_LIMIT_TIME_B", upperLowerList.get(3));
+        dr.put("VOL_LOWER_LIMIT_TIME_C", upperLowerList.get(4));
+        dr.put("VOL_UPPER_LIMIT_TIME_C", upperLowerList.get(5));
+
+        DecimalFormat df = new DecimalFormat("#.0000");
+        String volPassRate = "0";
+        int passCount = old.getInteger("passCount");
+        int total = old.getInteger("total");
+        if (passCount > 0 && total > 0) {
+            volPassRate = df.format((Double.parseDouble(String.valueOf(passCount)) * 100) / Double.parseDouble(String.valueOf(total)));
+        } else {
+            volPassRate = "0";
+        }
+        dr.put("VOL_PASSRATE", volPassRate);
+        this.insert(null, tableCode, dr);
+    }
+}

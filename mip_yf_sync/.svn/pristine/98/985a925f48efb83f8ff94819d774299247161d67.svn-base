@@ -1,0 +1,21 @@
+package com.mip.biz.oms.dmpManage.dmpLoadQuartz.service.impl;
+
+import com.mip.biz.oms.dmpManage.dmpLoadQuartz.service.DmpLoadQuartzService;
+import com.mip.core.util.ServiceLocator;
+
+/**
+ * 能耗周期表过载重载设置（月）
+ * 
+ * 创建日期 2016-4-11下午3:13:32
+ * 
+ * @author lingt
+ */
+public class CalcMonthLoadDataJob {
+
+	public void execute() throws Exception {
+		DmpLoadQuartzService service = (DmpLoadQuartzService) ServiceLocator
+				.getBean(DmpLoadQuartzService.class.getName());
+		service.updateMonthLoadData();
+	}
+
+}

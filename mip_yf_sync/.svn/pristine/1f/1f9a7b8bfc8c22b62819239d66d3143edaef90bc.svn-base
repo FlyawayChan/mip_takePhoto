@@ -1,0 +1,36 @@
+/**
+ * Copyright (C) 2015 Guangzhou Technologies Ltd.
+ *
+ * 本代码版权归广州佳和立创科技发展有限公司所有，且受到相关的法律保护。
+ * 没有经过版权所有者的书面同意，
+ * 任何其他个人或组织均不得以任何形式将本文件或本文件的部分代码用于其他商业用途。
+ *
+ */
+package com.mip.biz.oms.nhDataCount.service;
+
+import com.mip.core.basebiz.dto.DataRecord;
+import com.mip.core.basebiz.service.BizService;
+
+/**
+ * 能耗监测有功电量统计定时器
+ * @author pangrh
+ * @date  2016年4月11日 下午1:39:33
+ */
+public interface NhDataCountService extends BizService<DataRecord> {
+
+	/**
+	 * 统计能耗小时数据
+	 * */
+	public void countHourData();
+
+	/**
+	 * 统计能耗一天数据
+	 * */
+	public void countDayData();
+
+	/**
+	 * 统计能耗月数据
+	 * */
+	public void countMonthData();
+
+}

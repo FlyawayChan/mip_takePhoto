@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="mip_schedule_tasks:war">
+    <output-path>$PROJECT_DIR$/target</output-path>
+    <root id="archive" name="mip_schedule_tasks.war">
+      <element id="artifact" artifact-name="mip_schedule_tasks:war exploded" />
+    </root>
+  </artifact>
+</component>

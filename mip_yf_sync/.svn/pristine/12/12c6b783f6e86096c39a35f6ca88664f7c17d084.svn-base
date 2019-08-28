@@ -1,0 +1,36 @@
+package com.mip.biz.oms.dmpManage.dmpQuartz.service;
+
+/**
+ * 能耗统计定时器业务类
+ * 
+ * @author Administrator
+ */
+public interface DmpQuartzService {
+
+    /**
+     * 保存能耗监测小时统计记录（定时器）
+     * 
+     * @throws Exception
+     */
+    public void calcHourELData() throws Exception;
+
+    /**
+     * 保存能耗监测年统计记录
+     * 
+     * @throws Exception
+     */
+    public void calcYearELData() throws Exception;
+    /**
+     * 保存能耗监测日统计记录
+     * 
+     * @throws Exception
+     */
+    public void calcDayELData() throws Exception;
+    /**
+     * 保存能耗监测月统计记录
+     * 
+     * @throws Exception
+     */
+    public void calcMonthELData() throws Exception;
+
+}

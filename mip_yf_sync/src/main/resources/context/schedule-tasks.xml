@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+						http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"
+	default-lazy-init="true"
+	>
+
+	<!-- 定时器名字 -->
+	<bean id="schedulerFactory" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">
+			<list>
+				<!--同步mysql数据 -->
+				<ref bean="SyncPatrolDataTrigger"/>
+
+			</list>
+		</property>
+	</bean>
+
+
+	<!--同步mysql数据-->
+	<bean id="SyncPatrolData"
+		  class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<bean class="com.mip.biz.oms.yf_sync.service.impl.YfSyncDayDataJob"></bean>
+		</property>
+		<property name="targetMethod" value="execute"></property>
+	</bean>
+	<bean id="SyncPatrolDataTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="SyncPatrolData"></property>
+		<property name="cronExpression" value="55 */1 * * *  ?"></property><!-- 云浮同步数据测试时使用 -->
+	</bean>
+</beans>

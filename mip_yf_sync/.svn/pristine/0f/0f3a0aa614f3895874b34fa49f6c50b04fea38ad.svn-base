@@ -1,0 +1,5 @@
+#prpertiesÎÄ¼þ
+driver=com.mysql.jdbc.Driver
+url=jdbc:mysql://localhost:3306/yd_oms?characterEncoding=UTF-8
+username=root
+password=User@123

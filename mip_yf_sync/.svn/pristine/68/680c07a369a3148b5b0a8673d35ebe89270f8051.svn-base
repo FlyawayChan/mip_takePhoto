@@ -1,0 +1,22 @@
+package com.mip.biz.oms.gwmonitor.service.impl;
+
+import org.apache.log4j.Logger;
+
+import com.mip.biz.oms.gwmonitor.service.GwMonitorUpService;
+import com.mip.core.util.ServiceLocator;
+
+/**
+ * @author laijh
+ * @date 2018-04-18-11:02
+ */
+public class GwMonitorJob {
+	Logger logger=Logger.getLogger(GwMonitorJob.class);
+
+    public void execute() throws Exception {
+		logger.info("-----------------------更新终端状态开始-------------------");
+        GwMonitorUpService gwMonitorUpService = (GwMonitorUpService) ServiceLocator
+                .getBean(GwMonitorUpService.class.getName());
+        gwMonitorUpService.updateStatus();
+		logger.info("-----------------------更新终端状态开始-------------------");
+    }
+}

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+    "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="com.mip.biz.oms.pqmManage.pqmQuartz">
+    <select id="getDayPqmData" parameterType="map" resultType="datarecord">
+        select pmd.client_id, pmd.monitor_node_id, omn.monitor_node_name, omn.sensor_id, oms.monitor_id, omc.monitor_period, to_char(pmd.monitor_time, 'yyyy-mm-dd') monitor_time, pmd.vol_a, pmd.vol_b, pmd.vol_c, pw.v
+        from OMS_PQM_MONITOR_DATA pmd
+        inner join OMS_MONITOR_NODE omn on pmd.monitor_node_id=omn.id
+        inner join YD_DEV.DVC_PLACE dp on omn.obj_id=dp.id
+        inner join YD_DEV.DVC_DEVICE_PW pw on dp.pw_level=pw.id
+        inner join OMS_MONITOR_SENSOR oms on omn.sensor_id=oms.id
+        left join OMS_MONITOR_NODE_CF omc on omn.id=omc.monitor_node_id
+        where 1=1
+        <!-- and pmd.client_id = #{clientId} -->
+        and to_char(pmd.monitor_time, 'yyyy-mm-dd') = #{searchTime}
+        and not exists(
+            select 1 from OMS_PQM_STAT_DAY o
+            where 1=1
+            <!-- and o.client_id = #{clientId} -->
+            and to_char(o.stat_day, 'yyyy-mm-dd') = #{searchTime}
+        )
+    </select>
+    <select id="getMonthPqmData" parameterType="map" resultType="datarecord">
+        select pmd.client_id, pmd.monitor_node_id, omn.monitor_node_name, omn.sensor_id, oms.monitor_id, omc.monitor_period, to_char(pmd.monitor_time, 'yyyy-mm-dd') monitor_time, pmd.vol_a, pmd.vol_b, pmd.vol_c, pw.v
+        from OMS_PQM_MONITOR_DATA pmd
+        inner join OMS_MONITOR_NODE omn on pmd.monitor_node_id=omn.id
+        inner join YD_DEV.DVC_PLACE dp on omn.obj_id=dp.id
+        inner join YD_DEV.DVC_DEVICE_PW pw on dp.pw_level=pw.id
+        inner join OMS_MONITOR_SENSOR oms on omn.sensor_id=oms.id
+        left join OMS_MONITOR_NODE_CF omc on omn.id=omc.monitor_node_id
+        where 1=1
+        and pmd.client_id = ${clientId}
+        and to_char(pmd.monitor_time, 'yyyy-mm') = #{searchTime}
+        and not exists(
+            select 1 from OMS_PQM_STAT_MONTH o
+            where 1=1
+            <!-- and o.client_id = #{clientId} -->
+            and to_char(o.stat_month, 'yyyy-mm') = #{searchTime}
+        )
+    </select>
+</mapper>

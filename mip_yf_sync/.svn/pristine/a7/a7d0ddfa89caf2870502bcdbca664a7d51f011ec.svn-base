@@ -1,0 +1,366 @@
+/**
+ * Copyright (C) 2015 Guangzhou Technologies Ltd.
+ *
+ * 本代码版权归广州佳和立创科技发展有限公司所有，且受到相关的法律保护。
+ * 没有经过版权所有者的书面同意，
+ * 任何其他个人或组织均不得以任何形式将本文件或本文件的部分代码用于其他商业用途。
+ *
+ */
+package com.mip.biz.oms.nhDataCount.util;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
+
+import com.mip.core.basebiz.dto.DataRecord;
+import com.mip.core.util.DateUtil;
+
+/**
+ *
+ * @author pangrh
+ * @date 2016年4月11日 下午4:46:20
+ */
+public class TimeUtil {
+
+	// 上一小时
+	public static String getNowOfLastHour() {
+		SimpleDateFormat aSimpleDateFormat = new SimpleDateFormat(
+				"yyyy-MM-dd HH:mm:ss");
+		GregorianCalendar aGregorianCalendar = new GregorianCalendar();
+		aGregorianCalendar.set(Calendar.HOUR,
+				aGregorianCalendar.get(Calendar.HOUR) - 1);
+		String nowOfLastMonth = aSimpleDateFormat.format(aGregorianCalendar
+				.getTime());
+		return nowOfLastMonth;
+	}
+
+	// 上一天
+	public static String getNowOfLastDay() {
+		SimpleDateFormat aSimpleDateFormat = new SimpleDateFormat(
+				"yyyy-MM-dd HH:mm:ss");
+		GregorianCalendar aGregorianCalendar = new GregorianCalendar();
+		aGregorianCalendar.set(Calendar.DAY_OF_MONTH,
+				aGregorianCalendar.get(Calendar.DAY_OF_MONTH) - 1);
+		String nowOfLastMonth = aSimpleDateFormat.format(aGregorianCalendar
+				.getTime());
+		return nowOfLastMonth;
+	}
+
+	// 去年的现在
+	public static String getNowOfLastYear() {
+		SimpleDateFormat aSimpleDateFormat = new SimpleDateFormat(
+				"yyyy-MM-dd HH:mm:ss");
+		GregorianCalendar aGregorianCalendar = new GregorianCalendar();
+		aGregorianCalendar.set(Calendar.YEAR,
+				aGregorianCalendar.get(Calendar.YEAR) - 1);
+		String currentYearAndMonth = aSimpleDateFormat
+				.format(aGregorianCalendar.getTime());
+		return currentYearAndMonth;
+	}
+
+	// 上月的上一小时
+	public static String getLastHourOfLastMonth() {
+		SimpleDateFormat aSimpleDateFormat = new SimpleDateFormat(
+				"yyyy-MM-dd HH:mm:ss");
+		GregorianCalendar aGregorianCalendar = new GregorianCalendar();
+		aGregorianCalendar.set(Calendar.MONTH,
+				aGregorianCalendar.get(Calendar.MONTH) - 1);
+		aGregorianCalendar.set(Calendar.HOUR,
+				aGregorianCalendar.get(Calendar.HOUR) - 1);
+		String nowOfLastMonth = aSimpleDateFormat.format(aGregorianCalendar
+				.getTime());
+		return nowOfLastMonth;
+	}
+
+	// 上月的上一天
+	public static String getLastDayOfLastMonth() {
+		SimpleDateFormat aSimpleDateFormat = new SimpleDateFormat(
+				"yyyy-MM-dd HH:mm:ss");
+		GregorianCalendar aGregorianCalendar = new GregorianCalendar();
+		aGregorianCalendar.set(Calendar.MONTH,
+				aGregorianCalendar.get(Calendar.MONTH) - 1);
+		aGregorianCalendar.set(Calendar.DAY_OF_MONTH,
+				aGregorianCalendar.get(Calendar.DAY_OF_MONTH) - 1);
+		String nowOfLastMonth = aSimpleDateFormat.format(aGregorianCalendar
+				.getTime());
+		return nowOfLastMonth;
+	}
+
+	// 上个月
+	public static String getNowOfLastMonth() {
+		SimpleDateFormat aSimpleDateFormat = new SimpleDateFormat(
+				"yyyy-MM-dd HH:mm:ss");
+		GregorianCalendar aGregorianCalendar = new GregorianCalendar();
+		aGregorianCalendar.set(Calendar.MONTH,
+				aGregorianCalendar.get(Calendar.MONTH) - 1);
+		String nowOfLastMonth = aSimpleDateFormat.format(aGregorianCalendar
+				.getTime());
+		return nowOfLastMonth;
+	}
+
+	// 去年的上一小时
+	public static String getLastHourOfLastYear() {
+		SimpleDateFormat aSimpleDateFormat = new SimpleDateFormat(
+				"yyyy-MM-dd HH:mm:ss");
+		GregorianCalendar aGregorianCalendar = new GregorianCalendar();
+		aGregorianCalendar.set(Calendar.YEAR,
+				aGregorianCalendar.get(Calendar.YEAR) - 1);
+		aGregorianCalendar.set(Calendar.HOUR,
+				aGregorianCalendar.get(Calendar.HOUR) - 1);
+		String currentYearAndMonth = aSimpleDateFormat
+				.format(aGregorianCalendar.getTime());
+		return currentYearAndMonth;
+	}
+
+	// 去年的上一天
+	public static String getLastDayOfLastYear() {
+		SimpleDateFormat aSimpleDateFormat = new SimpleDateFormat(
+				"yyyy-MM-dd HH:mm:ss");
+		GregorianCalendar aGregorianCalendar = new GregorianCalendar();
+		aGregorianCalendar.set(Calendar.YEAR,
+				aGregorianCalendar.get(Calendar.YEAR) - 1);
+		aGregorianCalendar.set(Calendar.DAY_OF_MONTH,
+				aGregorianCalendar.get(Calendar.DAY_OF_MONTH) - 1);
+		String currentYearAndMonth = aSimpleDateFormat
+				.format(aGregorianCalendar.getTime());
+		return currentYearAndMonth;
+	}
+
+	// 去年的上一个月
+	public static String getLastMonthOfLastYear() {
+		SimpleDateFormat aSimpleDateFormat = new SimpleDateFormat(
+				"yyyy-MM-dd HH:mm:ss");
+		GregorianCalendar aGregorianCalendar = new GregorianCalendar();
+		aGregorianCalendar.set(Calendar.YEAR,
+				aGregorianCalendar.get(Calendar.YEAR) - 1);
+		aGregorianCalendar.set(Calendar.MONTH,
+				aGregorianCalendar.get(Calendar.MONTH) - 1);
+		String currentYearAndMonth = aSimpleDateFormat
+				.format(aGregorianCalendar.getTime());
+		return currentYearAndMonth;
+	}
+
+	/**
+	 * 获取昨天及现在之前的小时
+	 */
+	public static List<DataRecord> getPreviousHour() {
+		List<DataRecord> timeList = new ArrayList<DataRecord>();
+		String pattern="yyyy-MM-dd HH:mm:ss";
+		Calendar calendar = Calendar.getInstance();
+		String currentHourStr = DateUtil.format(calendar.getTime(), "HH");
+		String currentDay = DateUtil.format(calendar.getTime(), "yyyy-MM-dd");
+		int currentHour = Integer.parseInt(currentHourStr);
+		String zero = "0";
+		// 今天现在之前的小时
+		List<DataRecord> hourList=get24HourList(24);
+		while (currentHour > 0) {
+			--currentHour;
+			for(DataRecord hour:hourList){
+				if(hour.getInteger("HOUR")==currentHour){
+					String currentTime = currentDay + " " +hour.getString("HMS");
+					String lastYearTime =getLastYearTime(currentTime,pattern);
+					String lastMonthTime =getLastMonthTime(currentTime, pattern);
+					DataRecord dr = new DataRecord();
+					dr.put("currentTime", currentTime);
+					dr.put("lastYearTime", lastYearTime);
+					dr.put("lastMonthTime", lastMonthTime);
+					timeList.add(dr);
+				}
+			}
+		}
+		//这个月昨天前小时数据
+		int currDayOfMonth=Integer.parseInt(DateUtil.format(calendar.getTime(), "dd"))-1;
+		int currDayOfMonth_index=currDayOfMonth;
+		String currentMonth=DateUtil.format(calendar.getTime(), "yyyy-MM");
+		while(currDayOfMonth_index>=1){
+			zero = "0";
+			zero = currDayOfMonth_index < 10 ? zero : "";
+		    currentDay=currentMonth+"-"+zero+currDayOfMonth_index;
+			for(DataRecord hour:hourList){
+				String currentTime=currentDay+" "+hour.getString("HMS");
+				String lastYearTime =getLastYearTime(currentTime,pattern);
+				String lastMonthTime =getLastMonthTime(currentTime, pattern);
+				DataRecord dr = new DataRecord();
+				dr.put("currentTime", currentTime);
+				dr.put("lastYearTime", lastYearTime);
+				dr.put("lastMonthTime", lastMonthTime);
+				timeList.add(dr);
+			}
+			--currDayOfMonth_index;
+		}
+		//先前2个月份前的小时数据
+		int monthNum=2;
+		for(int i=1;i<=monthNum;i++){
+			calendar.add(Calendar.MONTH, -1);
+			currentMonth=DateUtil.format(calendar.getTime(), "yyyy-MM");
+			int maxDay=calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+			currDayOfMonth_index=maxDay;
+			while(currDayOfMonth_index>=1){
+				zero = "0";
+				zero = currDayOfMonth_index < 10 ? zero : "";
+			    currentDay=currentMonth+"-"+zero+currDayOfMonth_index;
+				for(DataRecord hour:hourList){
+					String currentTime=currentDay+" "+hour.getString("HMS");
+					String lastYearTime =getLastYearTime(currentTime,pattern);
+					String lastMonthTime =getLastMonthTime(currentTime, pattern);
+					DataRecord dr = new DataRecord();
+					dr.put("currentTime", currentTime);
+					dr.put("lastYearTime", lastYearTime);
+					dr.put("lastMonthTime", lastMonthTime);
+					timeList.add(dr);
+				}
+				--currDayOfMonth_index;
+			}
+		}
+		return timeList;
+	}
+
+	/**
+	 * 获取前两天日期
+	 */
+	public static List<DataRecord> getPreviousDay() {
+		List<DataRecord> timeList = new ArrayList<DataRecord>();
+		String pattern="yyyy-MM-dd HH:mm:ss";
+		Calendar calendar=Calendar.getInstance();
+		String hms=DateUtil.format(calendar.getTime(), "HH:mm:ss");
+		//这个月今天前天数据
+		String currentDay="";
+		int currDayOfMonth=Integer.parseInt(DateUtil.format(calendar.getTime(), "dd"))-1;
+		int currDayOfMonth_index=currDayOfMonth;
+		String currentMonth=DateUtil.format(calendar.getTime(), "yyyy-MM");
+		String zero = "0";
+		while(currDayOfMonth_index>=1){
+			zero = "0";
+			zero = currDayOfMonth_index < 10 ? zero : "";
+		    currentDay=currentMonth+"-"+zero+currDayOfMonth_index;
+				String currentTime=currentDay+" "+hms;
+				String lastYearTime =getLastYearTime(currentTime,pattern);
+				String lastMonthTime =getLastMonthTime(currentTime, pattern);
+				DataRecord dr = new DataRecord();
+				dr.put("currentTime", currentTime);
+				dr.put("lastYearTime", lastYearTime);
+				dr.put("lastMonthTime", lastMonthTime);
+				timeList.add(dr);
+				--currDayOfMonth_index;
+		}
+		//先前2个月份前的天数据
+		int monthNum=2;
+		for(int i=1;i<=monthNum;i++){
+			calendar.add(Calendar.MONTH, -1);
+			int maxDay=calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+			currentMonth=DateUtil.format(calendar.getTime(), "yyyy-MM");
+			currDayOfMonth_index=maxDay;
+			while(currDayOfMonth_index>=1){
+				zero = "0";
+				zero = currDayOfMonth_index < 10 ? zero : "";
+			    currentDay=currentMonth+"-"+zero+currDayOfMonth_index;
+					String currentTime=currentDay+" "+hms;
+					String lastYearTime =getLastYearTime(currentTime,pattern);
+					String lastMonthTime =getLastMonthTime(currentTime, pattern);
+					DataRecord dr = new DataRecord();
+					dr.put("currentTime", currentTime);
+					dr.put("lastYearTime", lastYearTime);
+					dr.put("lastMonthTime", lastMonthTime);
+					timeList.add(dr);
+					--currDayOfMonth_index;
+			}
+		}
+		return timeList;
+	}
+
+	/**
+	 * 获取前两个月日期
+	 */
+	public static List<DataRecord> getPreviousMonth() {
+		List<DataRecord> timeList = new ArrayList<DataRecord>();
+		String pattern="yyyy-MM-dd HH:mm:ss";
+		Calendar calendar=Calendar.getInstance();
+		//先前2个月份数据
+				int monthNum=2;
+				for(int i=1;i<=monthNum;i++){
+					calendar.add(Calendar.MONTH, -1);
+					String currentTime=DateUtil.format(calendar.getTime(), pattern);
+					String lastYearTime =getLastYearTime(currentTime,pattern);
+					String lastMonthTime =getLastMonthTime(currentTime, pattern);
+					DataRecord dr = new DataRecord();
+					dr.put("currentTime", currentTime);
+					dr.put("lastYearTime", lastYearTime);
+					dr.put("lastMonthTime", lastMonthTime);
+					timeList.add(dr);
+				}
+		return timeList;
+	}
+	/**
+	 * 获得24小时数据
+	 * */
+	public static List<DataRecord> get24HourList(int h){
+		List<DataRecord> hourList=new ArrayList<DataRecord>();
+		Date date=new Date();
+		String ms=DateUtil.format(date, "mm:ss");
+		int hour=h;
+		String zero="0";
+		while(hour>0){
+			--hour;
+			zero="0";
+			zero = hour < 10 ? zero : "";
+			String hourTime=zero+hour+":"+ms;
+			DataRecord d=new DataRecord();
+			d.put("hour", hour);
+			d.put("hms", hourTime);
+			hourList.add(d);
+			//System.out.println(hour+","+hourTime);
+		}
+		return hourList;
+	}
+
+	/**
+	 * 获取上月时间
+	 * */
+	public static String getLastMonthTime(String timeStr,String pattern){
+		String lastMonthTime="";
+		try {
+			Calendar calendar=Calendar.getInstance();
+			Date date=DateUtil.parse(timeStr, pattern);
+			calendar.setTime(date);
+			calendar.add(Calendar.MONTH,-1);
+			lastMonthTime=DateUtil.format(calendar.getTime(), pattern);
+		    //System.out.println(lastMonthTime);
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return lastMonthTime;
+	}
+	/**
+	 * 获取上年时间
+	 * */
+	public static String getLastYearTime(String timeStr,String pattern){
+		String lastYearTime="";
+		try {
+			Calendar calendar=Calendar.getInstance();
+			Date date=DateUtil.parse(timeStr, pattern);
+			calendar.setTime(date);
+			calendar.add(Calendar.YEAR,-1);
+			lastYearTime=DateUtil.format(calendar.getTime(), pattern);
+		    //System.out.println(lastMonthTime);
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return lastYearTime;
+	}
+	public static void main(String[] args) {
+		List<DataRecord> timeList=getPreviousHour();
+		for(DataRecord d:timeList){
+			System.out.println("currentTime:"+d.getString("CURRENTTIME")+",lastYearTime:"+d.getString("LASTYEARTIME")+",lastMonthTime:"+d.getString("LASTMONTHTIME"));
+		}
+		System.out.println(timeList.size());
+		//List<DataRecord> hourList=get24HourList(10);
+		//String lastMonthTime=getLastYearTime("2016-05-31 10:25:13","yyyy-MM-dd HH:mm:ss");
+
+	}
+}

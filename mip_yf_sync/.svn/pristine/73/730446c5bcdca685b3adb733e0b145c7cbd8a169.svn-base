@@ -1,0 +1,62 @@
+package com.mip.biz.oms.util;
+
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+
+/**
+ * @author zhouxiaoyun
+ * @date 2012-5-31 上午11:11:16
+ * @function 数据工具类
+ */
+public class NumberUtil {
+	//将相符率精确到小数点后面的3位数
+	public static String numberToPattern(double d){
+		DecimalFormat dt=(DecimalFormat) DecimalFormat.getInstance(); //获得格式化类对象
+		dt.applyPattern("0.00");//设置小数点位数(两位) 余下的会四舍五入
+		return dt.format(d);
+	}
+	
+	public static Float numberToPattern(float d){
+		NumberFormat formatter = NumberFormat.getNumberInstance();
+		formatter.setMaximumFractionDigits(3);
+		formatter.setGroupingUsed(false);
+		String sdouble = formatter.format(d);
+		return Float.parseFloat((sdouble));
+	}  
+	public static Double numberToPattern1(double d){
+		NumberFormat formatter = NumberFormat.getNumberInstance();
+		formatter.setMaximumFractionDigits(4);
+		formatter.setGroupingUsed(false);
+	
+		return  Double.valueOf(formatter.format(d));
+	}
+
+	public static Double numberToPattern(Double d){
+		if(d==null) return null;
+		DecimalFormat dt=(DecimalFormat) DecimalFormat.getInstance(); //获得格式化类对象
+		dt.applyPattern("0.0000");//设置小数点位数(两位) 余下的会四舍五入
+		return Double.valueOf(dt.format(d));
+	}
+	/**
+	 * 推荐使用这个方法
+	 * @param d
+	 * @param i 保留几位小数
+	 * @return
+	 */
+	public static Double numberToPatternNumber(double d,int i){
+		NumberFormat formatter = NumberFormat.getNumberInstance();
+		formatter.setMaximumFractionDigits(i);
+		formatter.setGroupingUsed(false);
+	
+		return  Double.valueOf(formatter.format(d));
+	}
+	public static void main(String arga[]){
+		float d11= 9.004358309044299E-4f;
+		float d=6.06257E-01f;
+		Double dd=9.004358309044299E-4;
+		System.out.println(numberToPattern(d11));
+	    System.out.println(numberToPattern(d));
+
+	}
+
+}

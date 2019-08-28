@@ -1,0 +1,30 @@
+package com.mip.biz.oms.pqmManage.pqmQuartz.service;
+
+import com.mip.core.basebiz.dto.DataRecord;
+import com.mip.core.basebiz.service.BizService;
+
+/**
+ * 电能质量周期统计定时器业务类
+ * 
+ * 创建日期 2016-4-13下午2:32:15
+ * 
+ * @author lingt
+ */
+public interface PqmQuartzService extends BizService<DataRecord> {
+
+    public final static String SQLMAP_PACKAGE = "com.mip.biz.oms.pqmManage.pqmQuartz.";
+
+    /**
+     * 计算电能质量日统计数据
+     * 
+     * @throws Exception
+     */
+    public void calcDayPqmData() throws Exception;
+
+    /**
+     * 计算电能质量月统计数据
+     * 
+     * @throws Exception
+     */
+    public void calcMonthPqmData() throws Exception;
+}

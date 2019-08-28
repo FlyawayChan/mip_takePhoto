@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration>
+
+<configuration>
+	<jmxConfigurator />
+	<timestamp key="yyyyMM" datePattern="yyyyMM"/>
+
+	<!-- 控制台输出日志 -->
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<layout class="ch.qos.logback.classic.PatternLayout">
+			<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %c - %msg%n</pattern>
+		</layout>
+	</appender>
+
+	<logger name="com.mip">
+		<level value="DEBUG" />
+	</logger>
+
+	<logger name="java.sql">
+		<level value="INFO" />
+	</logger>
+
+	<logger
+		name="org.springframework.security">
+		<level value="INFO" />
+	</logger>
+	<!-- 性能监控拦截日志 -->
+	<logger
+		name="org.springframework.aop.interceptor.JamonPerformanceMonitorInterceptor">
+		<level value="INFO" />
+	</logger>
+	<root>
+		<level value="INFO" />
+		<appender-ref ref="STDOUT" />
+	</root>
+</configuration>

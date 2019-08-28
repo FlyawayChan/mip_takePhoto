@@ -1,0 +1,44 @@
+package com.mip.biz.oms.dmpManage.dmpLoadQuartz.service.impl;
+
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.log4j.Logger;
+
+import com.mip.biz.oms.dmpManage.dmpLoadQuartz.service.DmpLoadQuartzService;
+import com.mip.core.basebiz.service.impl.BizServiceImpl;
+import com.mip.core.util.DateUtil;
+
+public class DmpLoadQuartzServiceImpl extends BizServiceImpl implements DmpLoadQuartzService {
+	Logger logger=Logger.getLogger(DmpLoadQuartzServiceImpl.class);
+
+    @Override
+    public void updateDayLoadData() throws Exception {
+    	logger.info("能耗周期表过载重载设置(天)开始时间："+DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss"));
+        Map<String, Object> map = new HashMap<String, Object>();
+        this.getDao().updateByStatement(SQLMAP_PACKAGE + "updateDayLoadData", map);
+        logger.info("能耗周期表过载重载设置(天)结束时间："+DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss"));
+    }
+
+    @Override
+    public void updateMonthLoadData() throws Exception {
+    	logger.info("能耗周期表过载重载设置(月)开始时间："+DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss"));
+        Calendar calendar = Calendar.getInstance();
+        String year = DateUtil.format(calendar.getTime(), "yyyy");
+        String month = DateUtil.format(calendar.getTime(), "MM");
+        calendar.add(Calendar.MONTH, -2);
+        String last_year = DateUtil.format(calendar.getTime(), "yyyy");
+        String last_month = DateUtil.format(calendar.getTime(), "MM");
+        String startTime = last_year + "-" + last_month + "-1 00:00:00";
+        String endTime = year + "-" + month + "-1 00:00:00";
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("startDate", startTime);
+        map.put("endDate", endTime);
+        // 执行完成后更新冻结数据中的重载过载数据、
+        this.getDao().updateByStatement(SQLMAP_PACKAGE + "updateMonthData", map);
+        logger.info("能耗周期表过载重载设置(月)结束时间："+DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss"));
+    }
+
+}

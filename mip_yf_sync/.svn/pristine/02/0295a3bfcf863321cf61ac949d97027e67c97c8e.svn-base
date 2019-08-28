@@ -1,0 +1,37 @@
+package _com.mip.common.auth.roleJob.service;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.mip.common.auth.roleJob.service.RoleJobService;
+import com.mip.core.util.ServiceLocator;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration({ "/context/core-context.xml" })
+public class RoleJobServiceTest implements ApplicationContextAware {
+	@Override
+    public void setApplicationContext(ApplicationContext context)
+            throws BeansException
+    {
+		ServiceLocator.initBeanFactory(context);
+    }
+	private RoleJobService roleJobService;
+
+	@Before
+	public void init() {
+		roleJobService = (RoleJobService) ServiceLocator.getBean(RoleJobService.class.getName());
+	}
+
+	@Test
+	public void testAddWorks() throws Exception {
+		System.err.println("testAddWorks：");
+		roleJobService.addWorks();
+	}
+
+}

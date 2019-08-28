@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+        "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.mip.biz.oms.yf_sync">
+    <select id="getKDataId" parameterType="map" resultType="datarecord">
+		select ID
+ 		from ${KDATA_TABLE_NAME}
+ 		where 1 = 1
+		and BEGIN_TIME = #{BEGIN_TIME}
+		and END_TIME = #{END_TIME}
+	</select>
+</mapper>

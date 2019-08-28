@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+    "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="com.mip.biz.oms.dmpManage.dmpLoadQuartz">
+    <!-- 更新天过载重载数据 -->
+    <update id="updateDayLoadData" parameterType="map">
+    <![CDATA[
+        update OMS_DSM_ELECTRIC_STAT_DAY d set (overload_time,  heavyload_time, rated_power)=(
+        select  overload_time,  heavyload_time, nvl(rated_power,null) from  (
+        select a.MONITOR_NODE_ID,MONITOR_NODE_NAME ,
+        MONITOR_ID,SENSOR_ID,monitorTIme as MONITOR_TIME,
+        sysdate as CREATE_TIME,client_id,FORWARD_ACT_POWER_TOTAL as ACT_POWER,
+        FORWARD_IDLE_POWER_TOTAL as IDLE_POWER,nvl(cf.monitor_period,'0')*overload_time as overload_time,
+        nvl(cf.monitor_period,'0')*heavyload_time as heavyload_time,rated_power
+        from (
+        select  d.MONITOR_NODE_ID,d.MONITOR_NODE_NAME,d.MONITOR_ID,d.SENSOR_ID,d.CLIENT_ID,to_char(monitor_time,'yyyy-MM-dd') as monitorTime ,
+        (max(FORWARD_ACT_POWER_TOTAL)-min(FORWARD_ACT_POWER_TOTAL)) as FORWARD_ACT_POWER_TOTAL,
+        (max(FORWARD_IDLE_POWER_TOTAL)-min(FORWARD_IDLE_POWER_TOTAL)) as FORWARD_IDLE_POWER_TOTAL,
+        max(rated_power)  as rated_power,
+         sum(
+          case   when (POW_FAC_TOTAL/rated_power)>=1 then 1
+          else 0 end
+         )as overload_time,
+          sum(
+          case   when ( (POW_FAC_TOTAL/rated_power)>=0.8 and (POW_FAC_TOTAL/rated_power)<1) then 1
+          else 0 end
+         ) as heavyload_time
+        from  OMS_DSM_ELECTRIC_COMMONLY_DATA d ,
+        (select node.id,node.client_id,y.rated_power from OMS_MONITOR_NODE node left join
+        OMS_EEM_MONITOR_NODE_EP_ENERGY y
+        on node.id=y.id and node.sensor_type_id=8
+        ) n
+        where n.rated_power is not null and n.client_id=d.client_id and d.monitor_node_id=n.id and monitor_time between to_date(to_char(add_months(sysdate,-1),'yyyy-MM-dd'),'yyyy-MM-dd')
+        and to_date(to_char(sysdate,'yyyy-MM-dd'),'yyyy-MM-dd')
+        group by d.MONITOR_NODE_ID,d.MONITOR_NODE_NAME,d.MONITOR_ID,d.SENSOR_ID,d.CLIENT_ID
+        ,to_char(monitor_time,'yyyy-MM-dd')
+        union all
+        select  d.MONITOR_NODE_ID,d.MONITOR_NODE_NAME,d.MONITOR_ID,d.SENSOR_ID,d.CLIENT_ID,to_char(monitor_time,'yyyy-MM-dd') as monitorTime ,
+        (max(FORWARD_ACT_POWER_TOTAL)-min(FORWARD_ACT_POWER_TOTAL)) as FORWARD_ACT_POWER_TOTAL,
+        (max(FORWARD_IDLE_POWER_TOTAL)-min(FORWARD_IDLE_POWER_TOTAL)) as FORWARD_IDLE_POWER_TOTAL,
+        null as rated_power,
+         0 as overload_time,0 as heavyload_time
+        from  OMS_DSM_ELECTRIC_COMMONLY_DATA d ,
+        (select node.id,node.client_id,y.rated_power from OMS_MONITOR_NODE node left join
+        OMS_EEM_MONITOR_NODE_EP_ENERGY y
+        on node.id=y.id and node.sensor_type_id=8
+        ) n
+        where n.rated_power is  null and n.client_id=d.client_id  and d.monitor_node_id=n.id and monitor_time between to_date(to_char(add_months(sysdate,-1),'yyyy-MM-dd'),'yyyy-MM-dd')
+        and to_date(to_char(sysdate,'yyyy-MM-dd'),'yyyy-MM-dd')
+        group by d.MONITOR_NODE_ID,d.MONITOR_NODE_NAME,d.MONITOR_ID,d.SENSOR_ID,d.CLIENT_ID
+        ,to_char(monitor_time,'yyyy-MM-dd')
+        ) a
+        left join OMS_MONITOR_NODE_CF cf
+        on cf.monitor_node_id=a.monitor_node_id
+        where 1=1
+            ) da where da.MONITOR_NODE_ID=d.MONITOR_NODE_ID and d.MONITOR_ID=da.MONITOR_ID
+            and  da.SENSOR_ID=d.SENSOR_ID and da.MONITOR_TIME= to_char(d.monitor_time,'yyyy-MM-dd') and da.client_id=d.Client_id)
+                 where  exists(
+          select 1 from YD_ENMS.EMS_ENERGY_METER er ,OMS_MONITOR_NODE node ,
+          OMS_MONITOR_SENSOR sen
+          where er.energy_meter_id=sen.id
+          and node.sensor_id =sen.id  and node.sensor_type_id=8
+          and er.freezing_function='否'
+          and  node.id=d.monitor_node_id
+            )  and d.monitor_time between to_date(to_char(add_months(sysdate,-1),'yyyy-MM-dd'),'yyyy-MM-dd')
+        and to_date(to_char(sysdate,'yyyy-MM-dd'),'yyyy-MM-dd')
+    ]]>
+    </update>
+
+    <!-- 更新月过载重载数据 -->
+    <update id="updateMonthLoadData" parameterType="map">
+    <![CDATA[
+	  update OMS_DSM_ELECTRIC_STAT_MONTH d set   (overload_time,  heavyload_time, rated_power)=(
+        select  overload_time,  heavyload_time, rated_power from  (
+        select a.MONITOR_NODE_ID,MONITOR_NODE_NAME ,
+		MONITOR_ID,SENSOR_ID,monitorTIme as MONITOR_TIME,
+		sysdate as CREATE_TIME,client_id,FORWARD_ACT_POWER_TOTAL as ACT_POWER,
+		FORWARD_IDLE_POWER_TOTAL as IDLE_POWER,nvl(cf.monitor_period,'0')*overload_time as overload_time,
+		nvl(cf.monitor_period,'0')*heavyload_time as heavyload_time,rated_power
+		from (
+		select  d.MONITOR_NODE_ID,d.MONITOR_NODE_NAME,d.MONITOR_ID,d.SENSOR_ID,d.CLIENT_ID,to_char(monitor_time,'yyyy-MM') as monitorTime ,
+		(max(FORWARD_ACT_POWER_TOTAL)-min(FORWARD_ACT_POWER_TOTAL)) as FORWARD_ACT_POWER_TOTAL,
+		(max(FORWARD_IDLE_POWER_TOTAL)-min(FORWARD_IDLE_POWER_TOTAL)) as FORWARD_IDLE_POWER_TOTAL,
+		max(rated_power)  as rated_power,
+		 sum(
+		  case   when (POW_FAC_TOTAL/rated_power)>=1 then 1
+		  else 0 end
+		 )as overload_time,
+		  sum(
+		  case   when ( (POW_FAC_TOTAL/rated_power)>=0.8 and (POW_FAC_TOTAL/rated_power)<1) then 1
+		  else 0 end
+		 ) as heavyload_time
+		from  OMS_DSM_ELECTRIC_COMMONLY_DATA d ,
+		(select node.id,node.client_id,y.rated_power from OMS_MONITOR_NODE node left join
+		OMS_EEM_MONITOR_NODE_EP_ENERGY y
+		on node.id=y.id and node.sensor_type_id=8
+		) n
+		where n.rated_power is not  null and n.client_id=d.client_id  and d.monitor_node_id=n.id and monitor_time between  to_date(#{startDate},'yyyy-MM-dd hh24:mi:ss')
+		and  to_date(#{endDate},'yyyy-MM-dd hh24:mi:ss')
+		group by d.MONITOR_NODE_ID,d.MONITOR_NODE_NAME,d.MONITOR_ID,d.SENSOR_ID,d.CLIENT_ID
+		,to_char(monitor_time,'yyyy-MM')
+		union all
+		select  d.MONITOR_NODE_ID,d.MONITOR_NODE_NAME,d.MONITOR_ID,d.SENSOR_ID,d.CLIENT_ID,to_char(monitor_time,'yyyy-MM') as monitorTime ,
+		(max(FORWARD_ACT_POWER_TOTAL)-min(FORWARD_ACT_POWER_TOTAL)) as FORWARD_ACT_POWER_TOTAL,
+		(max(FORWARD_IDLE_POWER_TOTAL)-min(FORWARD_IDLE_POWER_TOTAL)) as FORWARD_IDLE_POWER_TOTAL,
+		null as rated_power,
+		 0 as overload_time,0 as heavyload_time
+		from  OMS_DSM_ELECTRIC_COMMONLY_DATA d ,
+		(select node.id,node.client_id,y.rated_power from OMS_MONITOR_NODE node left join
+		OMS_EEM_MONITOR_NODE_EP_ENERGY y
+		on node.id=y.id and node.sensor_type_id=8
+		) n
+		where n.rated_power is  null and n.client_id=d.client_id  and d.monitor_node_id=n.id and monitor_time between to_date(#{startDate},'yyyy-MM-dd hh24:mi:ss')
+		and  to_date(#{endDate},'yyyy-MM-dd hh24:mi:ss')
+		group by d.MONITOR_NODE_ID,d.MONITOR_NODE_NAME,d.MONITOR_ID,d.SENSOR_ID,d.CLIENT_ID
+		,to_char(monitor_time,'yyyy-MM')
+		) a
+		left join OMS_MONITOR_NODE_CF cf
+		on cf.monitor_node_id=a.monitor_node_id
+		where 1=1
+        ) da where da.MONITOR_NODE_ID=d.MONITOR_NODE_ID and d.MONITOR_ID=da.MONITOR_ID
+        and  da.SENSOR_ID=d.SENSOR_ID and da.MONITOR_TIME= to_char(d.monitor_time,'yyyy-MM') and da.client_id=d.Client_id)
+             where  exists(
+      select 1 from YD_ENMS.EMS_ENERGY_METER er ,OMS_MONITOR_NODE node ,
+      OMS_MONITOR_SENSOR sen
+      where er.energy_meter_id=sen.id
+      and node.sensor_id =sen.id  and node.sensor_type_id=8
+      and er.freezing_function='否'
+      and  node.id=d.monitor_node_id
+        )  and  d.monitor_time between  to_date(#{startDate},'yyyy-MM-dd hh24:mi:ss')
+		and  to_date(#{endDate},'yyyy-MM-dd hh24:mi:ss')
+	]]>
+    </update>
+</mapper>

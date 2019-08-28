@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+        "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.mip.biz.oms.gwmonitor">
+
+    <update id="updateMonitorStatus" parameterType="map">
+        update YD_OMS.OMS_MONITOR set status = '离线',last_reset_time = sysdate
+        where status != '离线' and ((last_heartbeat_time &lt;= (sysdate- nvl(heartbeat_interval,5) / 24 / 60) or last_data_time &lt;= (sysdate- nvl(heartbeat_interval,5) / 24 / 60))
+        or (last_heartbeat_time is null and last_data_time is null))
+    </update>
+
+    <update id="updateSensorStatus" parameterType="map">
+        update YD_OMS.OMS_MONITOR_SENSOR a set status = '离线' where status != '离线'
+        and last_data_time &lt; (select (sysdate - nvl(B.HEARTBEAT_INTERVAL,5) / 24 / 60) from YD_OMS.OMS_MONITOR b where b.id = a.monitor_id)
+        or last_data_time is null
+    </update>
+
+</mapper>

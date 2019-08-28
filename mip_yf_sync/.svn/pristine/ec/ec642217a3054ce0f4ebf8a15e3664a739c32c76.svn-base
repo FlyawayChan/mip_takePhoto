@@ -1,0 +1,230 @@
+package com.mip.biz.oms.dmpManage.dmpQuartz.util;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import com.mip.core.basebiz.dto.DataRecord;
+
+/***
+ * 计算能耗统计数据所需方法
+ * @author zhouxiaoyun
+ *
+ */
+public class DmpUtil {
+	/***
+	 * list转为map
+	 * @param list
+	 * @param map
+	 */
+	public   static void changListToMap(List<DataRecord> list,Map<String,List<DataRecord>> map){
+		String tempKey=null,key=null;;
+		List<DataRecord> data=new ArrayList<DataRecord>();
+		for(DataRecord dr:list){
+			key= "L_"+dr.getString("MONITOR_NODE_ID");
+			if(tempKey==null || !tempKey.equals(key)){
+				data=new ArrayList<DataRecord>();
+				map.put(key, data);
+			}
+			data.add(dr);
+			tempKey=key;
+		}
+	}
+	/***
+	 * 时数据计算
+	 * @param tempList
+	 * @return
+	 */
+	public static List<DataRecord> calHourValue(List<DataRecord> tempList){
+		List<DataRecord> back=new ArrayList<DataRecord>();
+		DataRecord backDr=null,tempDr=null;
+		Date minDate=null,tempMinDate=null;
+		String minTime=null;
+		for(DataRecord data:tempList){
+			minDate=data.getDate("MINTIME");
+			minTime=TimeUtil.dateToString(minDate, "yyyyMMddHHmmss");
+			//如果是满足条件的N+1条
+			if(null!=tempMinDate&& null!=tempDr){
+				Calendar calendar = Calendar.getInstance();
+				calendar.setTime(tempMinDate);
+				calendar.add(Calendar.HOUR_OF_DAY, 1); //一个小时后的时间
+				//如果前一条数据一个小时后的时间与当前记录的时间相同，上一条数据可以保存
+				if(minDate.getTime()==calendar.getTime().getTime()){
+					backDr=new DataRecord();
+					getDrData(backDr,tempDr,data,true);
+					back.add(backDr);
+				}
+			}
+			//如果时间不是整点，数据废除
+			if(!minTime.endsWith("0000")){
+				continue;	
+			}else{
+				//当前数据是整点
+				tempDr=data;
+				tempMinDate=minDate;
+			}
+		}
+		return back;
+	}
+	/***
+	 * 天数据计算
+	 * @param tempList
+	 * @return
+	 */
+	public static List<DataRecord> calDayValue(List<DataRecord> tempList){
+		List<DataRecord> back=new ArrayList<DataRecord>();
+		DataRecord backDr=null,tempDr=null;
+		Date minDate=null,tempMinDate=null;
+		String minTime=null;
+		for(DataRecord data:tempList){
+			minDate=data.getDate("MAXTIME");
+			minTime=TimeUtil.dateToString(minDate, "yyyyMMddHHmmss");
+			//如果是满足条件的N+1条
+			if(null!=tempMinDate&& null!=tempDr){
+				Calendar calendar = Calendar.getInstance();
+				calendar.setTime(tempMinDate);
+				calendar.add(Calendar.DATE, 1); //一天后的时间
+				//如果前一条数据一个小时后的时间与当前记录的时间相同，上一条数据可以保存
+				if(minDate.getTime()==calendar.getTime().getTime()){
+					backDr=new DataRecord();
+					getNotHourDrData(backDr,tempDr,data,false);
+					back.add(backDr);
+				}
+			}
+			//如果时间不是整点，数据废除
+			if(!minTime.endsWith("230000")){
+				continue;	
+			}else{
+				//当前数据是整点
+				tempDr=data;
+				tempMinDate=minDate;
+			}
+		}
+		return back;
+	}
+	private static boolean isLastDayOfMonth(Date date){
+		Calendar calendar = Calendar.getInstance(); 
+		calendar.setTime(date); 
+		calendar.set(Calendar.DATE, (calendar.get(Calendar.DATE) + 1)); 
+		if (calendar.get(Calendar.DAY_OF_MONTH) == 1) { 
+			return true; 
+		}
+		return false; 
+	}
+	/***
+	 * 月数据计算
+	 * @param tempList
+	 * @return
+	 */
+	public static List<DataRecord> calMonthValue(List<DataRecord> tempList){
+		List<DataRecord> back=new ArrayList<DataRecord>();
+		DataRecord backDr=null,tempDr=null;
+		Date minDate=null,tempMinDate=null;
+		String minTime=null;
+		for(DataRecord data:tempList){
+			minDate=data.getDate("MAXTIME");
+			minTime=TimeUtil.dateToString(minDate, "yyyyMMddHHmmss");
+			//如果是满足条件的N+1条
+			if(null!=tempMinDate&& null!=tempDr){
+				Calendar calendar = Calendar.getInstance();
+				calendar.setTime(tempMinDate);
+				calendar.add(Calendar.MONTH, 1); //一天小时后的时间
+				//如果前一条数据一个小时后的时间与当前记录的时间相同，上一条数据可以保存
+				if(minDate.getTime()==calendar.getTime().getTime()){
+					backDr=new DataRecord();
+					getNotHourDrData(backDr,tempDr,data,false);
+					back.add(backDr);
+				}
+			}
+			//如果时间不是整点，数据废除
+			if(!(minTime.endsWith("230000")&&isLastDayOfMonth(minDate))){
+				continue;	
+			}else{
+				//当前数据是整点
+				tempDr=data;
+				tempMinDate=minDate;
+			}
+		}
+		return back;
+	}
+	/***
+	 * 月数据计算
+	 * @param tempList
+	 * @return
+	 */
+	public static List<DataRecord> calYearValue(List<DataRecord> tempList){
+		List<DataRecord> back=new ArrayList<DataRecord>();
+		DataRecord backDr=null,tempDr=null;
+		Date minDate=null,tempMinDate=null;
+		String minTime=null;
+		for(DataRecord data:tempList){
+			minDate=data.getDate("MAXTIME");
+			minTime=TimeUtil.dateToString(minDate, "yyyyMMddHHmmss");
+			//如果是满足条件的N+1条
+			if(null!=tempMinDate&& null!=tempDr){
+				Calendar calendar = Calendar.getInstance();
+				calendar.setTime(tempMinDate);
+				calendar.add(Calendar.MONTH, 1); //一天小时后的时间
+				//如果前一条数据一个小时后的时间与当前记录的时间相同，上一条数据可以保存
+				if(minDate.getTime()==calendar.getTime().getTime()){
+					backDr=new DataRecord();
+					getNotHourDrData(backDr,tempDr,data,false);
+					back.add(backDr);
+				}
+			}
+			//如果时间不是整点，数据废除
+			if(!minTime.endsWith("1231230000")){
+				continue;	
+			}else{
+				//当前数据是整点
+				tempDr=data;
+				tempMinDate=minDate;
+			}
+		}
+		return back;
+	}
+	//满足条件的dr转换
+	private static void  getDrData(DataRecord backDr,DataRecord tempDr,DataRecord data,boolean type ){
+		backDr.put("MONITOR_NODE_ID",tempDr.get("MONITOR_NODE_ID"));
+		backDr.put("MONITOR_NODE_NAME",tempDr.get("MONITOR_NODE_NAME"));
+		backDr.put("MONITOR_ID",tempDr.get("MONITOR_ID"));
+		backDr.put("SENSOR_ID",tempDr.get("SENSOR_ID"));
+		backDr.put("MONITOR_TIME",tempDr.get("MONITOR_TIME"));
+		backDr.put("CREATE_TIME",tempDr.get("CREATE_TIME"));
+		backDr.put("CLIENT_ID",tempDr.get("CLIENT_ID"));
+		if(type){
+			backDr.put("STAT_TYPE",tempDr.get("STAT_TYPE"));
+		}
+		backDr.put("OVERLOAD_TIME",tempDr.get("OVERLOAD_TIME"));
+		backDr.put("HEAVYLOAD_TIME",tempDr.get("HEAVYLOAD_TIME"));
+		backDr.put("RATED_POWER",tempDr.get("RATED_POWER"));
+		//(N+1)的最小值-N的最小值，N两者的时间相差一个小时
+		backDr.put("ACT_POWER",(Double.valueOf(data.getString("MINACT"))-Double.valueOf(tempDr.getString("MINACT"))));
+		backDr.put("IDLE_POWER",(Double.valueOf(data.getString("MINIDLE"))-Double.valueOf(tempDr.getString("MINIDLE"))));
+		backDr.put("ELECTRIC_METER_NUMBER",(Double.valueOf(data.getString("MINACT"))));
+		backDr.put("ELECTRIC_METER1_NUMBER",(Double.valueOf(data.getString("MINIDLE"))));
+
+	}
+	private static void  getNotHourDrData(DataRecord backDr,DataRecord tempDr,DataRecord data,boolean type ){
+		backDr.put("MONITOR_NODE_ID",data.get("MONITOR_NODE_ID"));
+		backDr.put("MONITOR_NODE_NAME",data.get("MONITOR_NODE_NAME"));
+		backDr.put("MONITOR_ID",data.get("MONITOR_ID"));
+		backDr.put("SENSOR_ID",data.get("SENSOR_ID"));
+		backDr.put("MONITOR_TIME",data.get("MONITOR_TIME"));
+		backDr.put("CREATE_TIME",data.get("CREATE_TIME"));
+		backDr.put("CLIENT_ID",data.get("CLIENT_ID"));
+		backDr.put("OVERLOAD_TIME",data.get("OVERLOAD_TIME"));
+		backDr.put("HEAVYLOAD_TIME",data.get("HEAVYLOAD_TIME"));
+		backDr.put("RATED_POWER",data.get("RATED_POWER"));
+		if(type){
+			backDr.put("STAT_TYPE",tempDr.get("STAT_TYPE"));
+		}
+		//(N+1)的最小值-N的最小值，N两者的时间相差一个小时
+		backDr.put("ACT_POWER",(Double.valueOf(data.getString("MAXACT"))-Double.valueOf(tempDr.getString("MAXACT"))));
+		backDr.put("IDLE_POWER",(Double.valueOf(data.getString("MAXIDLE"))-Double.valueOf(tempDr.getString("MAXIDLE"))));
+		backDr.put("ELECTRIC_METER_NUMBER",(Double.valueOf(data.getString("MAXACT"))));
+		backDr.put("ELECTRIC_METER1_NUMBER",(Double.valueOf(data.getString("MAXIDLE"))));
+	}
+}

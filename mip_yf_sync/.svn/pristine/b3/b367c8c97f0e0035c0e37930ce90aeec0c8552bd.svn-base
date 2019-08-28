@@ -1,0 +1,20 @@
+package com.mip.biz.oms.yf_sync.service;
+
+import com.mip.biz.oms.yf_sync.bean.syncDataBean;
+import com.mip.core.basebiz.dto.DataRecord;
+import com.mip.core.basebiz.service.BizService;
+
+import java.util.Date;
+import java.util.List;
+
+public interface yfSyncService extends BizService<DataRecord> {
+    public static String SQLMAP_PACKAGE = "com.mip.biz.oms.yf_sync.";
+    /*
+    * 获取同步数据
+    *
+    * */
+    public List<DataRecord> getSyncData(Date beginTime, Date endTime);
+
+
+    public void countDayData();
+}

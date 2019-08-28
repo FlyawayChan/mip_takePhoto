@@ -1,0 +1,80 @@
+/**
+ * Copyright (C) 2011 Guangzhou JHComn Technologies Ltd.
+ *
+ * 本代码版权归广州佳和立创科技发展有限公司所有，且受到相关的法律保护。
+ * 没有经过版权所有者的书面同意，
+ * 任何其他个人或组织均不得以任何形式将本文件或本文件的部分代码用于其他商业用途。
+ *
+ */
+package com.mip.biz.oms.config.service.impl;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.mip.biz.oms.config.service.OmsConfigService;
+import com.mip.core.basebiz.dto.DataRecord;
+import com.mip.core.basebiz.dto.limit.Limit;
+import com.mip.core.basebiz.service.impl.BizServiceImpl;
+
+public class OmsConfigServiceImpl extends BizServiceImpl  implements OmsConfigService{
+
+	private static List<DataRecord> sensorTypes = null;
+	private static Map<Long,DataRecord> sensorTypesMap = new HashMap<Long,DataRecord>();
+	private static List<DataRecord> monitorAims = null;
+	private static Map<Long,List<DataRecord>> monitorAimsMap = new HashMap<Long,List<DataRecord>>();
+
+	@Override
+	public List<DataRecord> getSensorTypes() {
+		if(sensorTypes != null){
+			return sensorTypes;
+		}
+		synchronized (sensorTypesMap) {
+			Limit limit = Limit.createStatementLimit(SQLMAP_PACKAGE+ "getSensorTypes");
+			sensorTypes = getDao().queryForDataSet(limit,false).getResults();
+			for(int i=0;sensorTypes!=null&&i<sensorTypes.size();i++){
+				sensorTypesMap.put(sensorTypes.get(i).getLong("ID"),sensorTypes.get(i));
+			}
+
+		}
+		return sensorTypes;
+	}
+	@Override
+	public DataRecord getSensorType(long id) {
+		if(sensorTypesMap.isEmpty()){
+			getSensorTypes();
+		}
+		return sensorTypesMap.get(id);
+	}
+	@Override
+	public List<DataRecord> getMonitorAims() {
+		if(monitorAims != null){
+			return monitorAims;
+		}
+		synchronized (monitorAimsMap) {
+			Limit limit = Limit.createStatementLimit(SQLMAP_PACKAGE+ "getMonitorAims");
+			monitorAims = getDao().queryForDataSet(limit,false).getResults();
+			for(int i=0;monitorAims!=null&&i<monitorAims.size();i++){
+				if(monitorAimsMap.get(monitorAims.get(i).getLong("SENSOR_TYPE_ID")) == null){
+					List<DataRecord> smallMonitorAims = new ArrayList<DataRecord>();
+					smallMonitorAims.add(monitorAims.get(i));
+					monitorAimsMap.put(monitorAims.get(i).getLong("SENSOR_TYPE_ID"),smallMonitorAims);
+				}else{
+					List<DataRecord> smallMonitorAims = monitorAimsMap.get(monitorAims.get(i).getLong("SENSOR_TYPE_ID"));
+					smallMonitorAims.add(monitorAims.get(i));
+					monitorAimsMap.put(monitorAims.get(i).getLong("SENSOR_TYPE_ID"),smallMonitorAims);
+				}
+			}
+		}
+		return monitorAims;
+	}
+
+	@Override
+	public List<DataRecord> getMonitorAim(long senorTypeId) {
+		if(monitorAimsMap.isEmpty()){
+			getMonitorAims();
+		}
+		return monitorAimsMap.get(senorTypeId);
+	}
+}

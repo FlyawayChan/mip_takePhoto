@@ -1,0 +1,20 @@
+package com.mip.biz.oms.pqmManage.pqmQuartz.service.impl;
+
+import com.mip.biz.oms.pqmManage.pqmQuartz.service.PqmQuartzService;
+import com.mip.core.util.ServiceLocator;
+
+/**
+ * 电能质量周期统计（月）
+ * 
+ * 创建日期 2016-4-13下午4:10:35
+ * 
+ * @author lingt
+ */
+public class CalcMonthPqmDataJob {
+
+    public void execute() throws Exception {
+        PqmQuartzService service = (PqmQuartzService) ServiceLocator.getBean(PqmQuartzService.class.getName());
+        service.calcMonthPqmData();
+    }
+
+}

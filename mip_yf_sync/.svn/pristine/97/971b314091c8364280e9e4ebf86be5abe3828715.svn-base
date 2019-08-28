@@ -1,0 +1,152 @@
+package com.mip.biz.oms.dmpManage.dmpQuartz.service.impl;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.log4j.Logger;
+
+import com.mip.biz.oms.dmpManage.dmpQuartz.service.DmpQuartzService;
+import com.mip.biz.oms.dmpManage.dmpQuartz.util.DmpUtil;
+import com.mip.core.basebiz.dto.DataRecord;
+import com.mip.core.basebiz.service.impl.BizServiceImpl;
+import com.mip.core.util.DateUtil;
+
+@SuppressWarnings({ "unchecked", "rawtypes" })
+public class DmpQuartzServiceImpl extends BizServiceImpl implements DmpQuartzService {
+
+	private final String SQLMAP_PACKAGE = "com.mip.biz.oms.dmpManage.dmpQuartz.";
+	Logger logger=Logger.getLogger(DmpQuartzServiceImpl.class);
+
+	/**
+	 * 客户信息
+	 * @return
+	 */
+
+	private List<DataRecord> getClientInfo(){
+		return this.getDao().queryForDataSet(SQLMAP_PACKAGE + "getClientInfo", new HashMap()).getResults();
+	}
+
+	@Override
+	public void calcHourELData() throws Exception {
+		logger.info("电网参数监测时统计数据(由平台统计)开始时间:"+DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss"));
+		List<DataRecord> clientList=this.getClientInfo();
+		for(DataRecord client:clientList){
+			logger.info(DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss")+"电网参数监测时统计数据(由平台统计)客户id:"+ client.getString("CLIENT_ID")+",节点个数"+client.getString("CNUM"));
+			Map<String,Object> m=new HashMap<String,Object>();
+			m.put("client_id", client.getString("CLIENT_ID"));
+			List<DataRecord> list = this.getDao().queryForDataSet(SQLMAP_PACKAGE + "getHourUnSaveELData", m).getResults();
+			logger.info(DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss")+"电网参数监测时统计数据(由平台统计)查询结束:"+list.size());
+			Map<String,List<DataRecord>> map=new HashMap<String,List<DataRecord>>();
+			DmpUtil.changListToMap(list, map);
+			logger.info(DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss")+"电网参数监测时统计数据(由平台统计)转map结束:");
+			List<DataRecord> back=new ArrayList<DataRecord>();
+			for(String key:map.keySet()){
+				back=DmpUtil.calHourValue(map.get(key));
+				logger.info(DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss")+"电网参数监测时统计数据(由平台统计)转data结束:"+key);
+				for(DataRecord l: back){
+					l.put("ID",this.getDao().generateId());
+					this.getDao().insert("OMS_DSM_ELECTRIC_STAT_OTHER","ID",l);
+				}
+			}
+		}
+		logger.info(DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss")+"电网参数监测时统计数据(由平台统计)结束时间:");
+	}
+
+	@Override
+	public void calcYearELData() throws Exception {
+		logger.info("电网参数监测年统计数据(由平台统计)开始时间:"+DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss"));
+		List<DataRecord> clientList=this.getClientInfo();
+		Calendar calendar = Calendar.getInstance();
+		int year = calendar.get(Calendar .YEAR);
+		String	startTime=year-2+"-1-1 00:00:00";
+		String endTime =year+"-1-1 00:00:00";
+		for(DataRecord client:clientList){
+			logger.info(DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss")+"电网参数监测年统计数据(由平台统计)客户id:"+ client.getString("CLIENT_ID")+",节点个数"+client.getString("CNUM"));
+			Map<String,Object> m=new HashMap<String,Object>();
+			m.put("client_id", client.getString("CLIENT_ID"));
+			m.put("startTime", startTime);
+			m.put("endTime", endTime);
+			List<DataRecord> list = this.getDao().queryForDataSet(SQLMAP_PACKAGE + "getYearUnSaveELData", m).getResults();
+			logger.info(DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss")+"电网参数监测年统计数据(由平台统计)查询结束:"+list.size());
+			Map<String,List<DataRecord>> map=new HashMap<String,List<DataRecord>>();
+			DmpUtil.changListToMap(list, map);
+			logger.info(DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss")+"电网参数监测年统计数据(由平台统计)转map结束:");
+			List<DataRecord> back=new ArrayList<DataRecord>();
+			for(String key:map.keySet()){
+				back=DmpUtil.calYearValue(map.get(key));
+				logger.info(DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss")+"电网参数监测年统计数据(由平台统计)转data结束:"+key);
+				for(DataRecord l: back){
+					l.put("ID",this.getDao().generateId());
+					this.getDao().insert("OMS_DSM_ELECTRIC_STAT_OTHER","ID",l);
+				}
+			}
+		}
+		logger.info(DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss")+"电网参数监测年统计数据(由平台统计)结束时间:");
+	}
+
+	@Override
+	public void calcDayELData() throws Exception {
+		logger.info("电网参数监测日统计数据(由平台统计)开始时间:"+DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss"));
+		List<DataRecord> clientList=this.getClientInfo();
+		for(DataRecord client:clientList){
+			logger.info(DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss")+"电网参数监测日统计数据(由平台统计)客户id:"+ client.getString("CLIENT_ID")+",节点个数"+client.getString("CNUM"));
+			Map<String,Object> m=new HashMap<String,Object>();
+			m.put("client_id", client.getString("CLIENT_ID"));
+			List<DataRecord> list = this.getDao().queryForDataSet(SQLMAP_PACKAGE + "getDayUnSaveELData", m).getResults();
+			logger.info(DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss")+"电网参数监测日统计数据(由平台统计)查询结束:"+list.size());
+			Map<String,List<DataRecord>> map=new HashMap<String,List<DataRecord>>();
+			DmpUtil.changListToMap(list, map);
+			logger.info(DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss")+"电网参数监测日统计数据(由平台统计)转map结束:");
+			List<DataRecord> back=new ArrayList<DataRecord>();
+			for(String key:map.keySet()){
+				back=DmpUtil.calDayValue(map.get(key));
+				logger.info(DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss")+"电网参数监测日统计数据(由平台统计)转data结束:"+key);
+				for(DataRecord l: back){
+					l.put("ID",this.getDao().generateId());
+					this.getDao().insert("OMS_DSM_ELECTRIC_STAT_DAY","ID",l);
+				}
+			}
+		}
+		logger.info(DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss")+"电网参数监测日统计数据(由平台统计)结束时间:");
+	}
+
+	@Override
+	public void calcMonthELData() throws Exception {
+		logger.info("电网参数监测月统计数据(由平台统计)开始时间:"+DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss"));
+		List<DataRecord> clientList=this.getClientInfo();
+		Calendar calendar = Calendar.getInstance();
+		String year = DateUtil.format(calendar.getTime(),"yyyy");
+		String month = DateUtil.format(calendar.getTime(),"MM");
+		calendar.add(Calendar.MONTH, -2);
+		String last_year = DateUtil.format(calendar.getTime(),"yyyy");
+		String last_month= DateUtil.format(calendar.getTime(),"MM");
+		String startTime =last_year+"-"+last_month+"-1 00:00:00";
+		String endTime=year+"-"+month+"-1 00:00:00";
+		for(DataRecord client:clientList){
+			logger.info(DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss")+"电网参数监测月统计数据(由平台统计)客户id:"+ client.getString("CLIENT_ID")+",节点个数"+client.getString("CNUM"));
+			Map<String,Object> m=new HashMap<String,Object>();
+			m.put("client_id", client.getString("CLIENT_ID"));
+			m.put("startTime", startTime);
+			m.put("endTime", endTime);
+			List<DataRecord> list = this.getDao().queryForDataSet(SQLMAP_PACKAGE + "getMonthUnSaveELData", m).getResults();
+			logger.info(DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss")+"电网参数监测月统计数据(由平台统计)查询结束:"+list.size());
+			Map<String,List<DataRecord>> map=new HashMap<String,List<DataRecord>>();
+			DmpUtil.changListToMap(list, map);
+			logger.info(DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss")+"电网参数监测月统计数据(由平台统计)转map结束:");
+			List<DataRecord> back=new ArrayList<DataRecord>();
+			for(String key:map.keySet()){
+				back=DmpUtil.calMonthValue(map.get(key));
+				logger.info(DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss")+"电网参数监测月统计数据(由平台统计)转data结束:"+key);
+				for(DataRecord l: back){
+					l.put("ID",this.getDao().generateId());
+					this.getDao().insert("OMS_DSM_ELECTRIC_STAT_MONTH","ID",l);
+				}
+			}
+		}
+		logger.info(DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss")+"电网参数监测月统计数据(由平台统计)结束时间:");
+	}
+}

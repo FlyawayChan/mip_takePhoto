@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+        "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.mip.biz.oms.yf_sync">
+    <select id="getTaskId" parameterType="map" resultType="datarecord">
+		select ID
+ 		from ${tableName}
+ 		where PLAN_NO = #{PLAN_NO}
+	</select>
+	<select id="getCreateUserInfo" parameterType="map" resultType="datarecord">
+		select *
+ 		from YD_CORE.MIP_ORG_USER
+ 		where NAME IN (#{NAME},'jh_test')
+	</select>
+	<select id="getNewSyncTimeRecord" parameterType="map" resultType="datarecord">
+		select *
+ 		from YD_YF_SYNCH.YF_SYNC_RECORD
+ 		where TABLE_NAME = #{tableName}
+ 		order by SYNC_TIME DESC
+	</select>
+	<select id="SyncRecord" parameterType="map" resultType="datarecord">
+		select *
+ 		from yyzh_zygk_zyjh
+ 		where jhbh = #{jhbh}
+	</select>
+</mapper>

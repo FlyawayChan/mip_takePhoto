@@ -1,0 +1,29 @@
+package com.mip.biz.oms.dmpManage.dmpLoadQuartz.service;
+
+import com.mip.core.basebiz.dto.DataRecord;
+import com.mip.core.basebiz.service.BizService;
+
+/**
+ * 能耗周期表 过载时间、重载时间设置
+ * 创建日期        2016-4-11下午3:03:53
+ * @author lingt
+ */
+public interface DmpLoadQuartzService extends BizService<DataRecord> {
+
+    public final String SQLMAP_PACKAGE = "com.mip.biz.oms.dmpManage.dmpLoadQuartz.";
+
+    /**
+     * 更新能耗周期统计的过载和重载记录（天）
+     * 
+     * @throws Exception
+     */
+    public void updateDayLoadData() throws Exception;
+
+    /**
+     * 更新能耗周期统计的过载和重载记录（月）
+     * 
+     * @throws Exception
+     */
+    public void updateMonthLoadData() throws Exception;
+
+}

@@ -1,0 +1,503 @@
+/**
+ * Copyright (C) 2015 Guangzhou Technologies Ltd.
+ *
+ * 本代码版权归广州佳和立创科技发展有限公司所有，且受到相关的法律保护。
+ * 没有经过版权所有者的书面同意，
+ * 任何其他个人或组织均不得以任何形式将本文件或本文件的部分代码用于其他商业用途。
+ *
+ */
+package com.mip.biz.oms.nhDataCount.service.impl;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.log4j.Logger;
+
+import com.mip.biz.oms.nhDataCount.service.NhDataCountService;
+import com.mip.biz.oms.nhDataCount.util.TimeUtil;
+import com.mip.biz.oms.util.NumberUtil;
+import com.mip.core.basebiz.dto.DataRecord;
+import com.mip.core.basebiz.service.ServiceException;
+import com.mip.core.basebiz.service.impl.BizServiceImpl;
+import com.mip.core.util.DateUtil;
+
+/**
+ *
+ * @author pangrh
+ * @date  2016年4月11日 下午1:40:28
+ */
+public class NhDataCountServiceImpl extends BizServiceImpl implements NhDataCountService {
+	private static final String SQL_PATH="com.mip.biz.oms.nhDataCount.";
+	Logger logger=Logger.getLogger(NhDataCountServiceImpl.class);
+	/* (non-Javadoc)
+	 * @see com.mip.biz.oms.nhDataCount.service.NhDataCountService#countHourData()
+	 */
+	@Override
+	public void countHourData() {
+		logger.info("电网参数有功电量小时统计开始时间："+DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss"));
+		List<DataRecord> clientList=this.getDao().queryForDataSet(SQL_PATH+"selectDvcPlaceGroupByClientId",null).getResults();		for(DataRecord c:clientList){
+		long startTime=System.currentTimeMillis();
+		String clientId=c.getString("CLIENT_ID");
+		logger.info("当前客户Id："+clientId);
+		logger.info("能耗监测有功电量小时统计开始,开始时间："+DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss"));
+		Map<String,Object> map=new HashMap<String,Object>();
+		map.put("clientId",clientId);
+		List<DataRecord> placeListData=this.getDao().queryForDataSet(SQL_PATH+"selectNhPlaceListData", map).getResults();
+		//OMS_DSM_ELECTRIC_STAT_OTHER 能耗监测其它周期统计数据
+		List<DataRecord> hourListData=this.getDao().queryForDataSet(SQL_PATH+"selectNhHourListData", map).getResults();
+		//位置能耗小时统计表
+		List<DataRecord> hourCountListData=this.getDao().queryForDataSet(SQL_PATH+"selectNhHourCountListData", map).getResults();
+		//能耗位置信息数据
+		List<DataRecord> nhListData=this.getDao().queryForDataSet(SQL_PATH+"selectNhListData", map).getResults();
+		//告警数据
+		List<DataRecord> nhAlarmListData=this.getDao().queryForDataSet(SQL_PATH+"selectNhHourAlarmListData", map).getResults();
+		//分组时间数据，用来判断是否已经统计过某时的数据
+		map.put("tableCode", "OMS_DSM_PLACE_STAT_HOUR");
+		map.put("timeFormat", "yyyy-MM-dd hh24");
+		//数据库中存在的时间数据
+		List<DataRecord> timeList=this.getDao().queryForDataSet(SQL_PATH+"selectGroupByTime",map).getResults();
+		//数据库中需要有的时间数据
+		List<DataRecord> previousHourList=TimeUtil.getPreviousHour();
+		for(DataRecord time:previousHourList){
+			String nowOfLastTime=time.getString("CURRENTTIME");
+			String nowOfLastYear=time.getString("LASTYEARTIME");
+			String nowOfLastMonth=time.getString("LASTMONTHTIME");
+			boolean timeFlag=isExistTime(nowOfLastTime, "yyyy-MM-dd HH", timeList);
+			//不存在则统计
+			if(!timeFlag){
+				countData(clientId, "hour", "OMS_DSM_PLACE_STAT_HOUR", placeListData, hourListData, hourCountListData,
+						nhListData, nhAlarmListData, "yyyy-MM-dd HH", nowOfLastTime, nowOfLastYear, nowOfLastMonth);
+			}
+		}
+
+		long endTime=System.currentTimeMillis();
+		logger.info("能耗监测有功电量小时统计结束,结束时间："+DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss"));
+		logger.info("总耗时："+(endTime-startTime)/1000+"s");
+		logger.info("电网参数有功电量小时统计结束时间："+DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss"));
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see com.mip.biz.oms.nhDataCount.service.NhDataCountService#countDayData()
+	 */
+	@Override
+	public void countDayData() {
+		logger.info("电网参数有功电量天统计开始时间："+DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss"));
+		List<DataRecord> clientList=this.getDao().queryForDataSet(SQL_PATH+"selectDvcPlaceGroupByClientId",null).getResults();
+		for(DataRecord c:clientList){
+		long startTime=System.currentTimeMillis();
+		String clientId=c.getString("CLIENT_ID");
+		logger.info("当前客户Id："+clientId);
+		logger.info("能耗监测有功电量天统计开始,开始时间："+DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss"));
+		Map<String,Object> map=new HashMap<String,Object>();
+		map.put("clientId",clientId);
+		List<DataRecord> placeListData=this.getDao().queryForDataSet(SQL_PATH+"selectNhPlaceListData", map).getResults();
+		//OMS_DSM_ELECTRIC_STAT_DAY 能耗监测日统计数据
+		List<DataRecord> dayListData=this.getDao().queryForDataSet(SQL_PATH+"selectNhDayListData", map).getResults();
+		//位置能耗天统计表
+		List<DataRecord> dayCountListData=this.getDao().queryForDataSet(SQL_PATH+"selectNhDayCountListData", map).getResults();
+		//能耗位置信息数据
+		List<DataRecord> nhListData=this.getDao().queryForDataSet(SQL_PATH+"selectNhListData", map).getResults();
+		//告警数据
+		List<DataRecord> nhAlarmListData=this.getDao().queryForDataSet(SQL_PATH+"selectNhDayAlarmListData", map).getResults();
+		//分组时间数据，用来判断是否已经统计过某时的数据
+		map.put("tableCode", "OMS_DSM_PLACE_STAT_DAY");
+		map.put("timeFormat", "yyyy-MM-dd");
+		//数据库中存在的时间数据
+		List<DataRecord> timeList=this.getDao().queryForDataSet(SQL_PATH+"selectGroupByTime",map).getResults();
+		//数据库中需要有的时间数据
+		List<DataRecord> previousHourList=TimeUtil.getPreviousDay();
+		for(DataRecord time:previousHourList){
+			String nowOfLastTime=time.getString("CURRENTTIME");
+			String nowOfLastYear=time.getString("LASTYEARTIME");
+			String nowOfLastMonth=time.getString("LASTMONTHTIME");
+			boolean timeFlag=isExistTime(nowOfLastTime, "yyyy-MM-dd", timeList);
+			//不存在则统计
+			if(!timeFlag){
+				countData(clientId, "day", "OMS_DSM_PLACE_STAT_DAY", placeListData, dayListData, dayCountListData,
+						nhListData, nhAlarmListData, "yyyy-MM-dd", nowOfLastTime, nowOfLastYear, nowOfLastMonth);
+			}
+		}
+
+		long endTime=System.currentTimeMillis();
+		logger.info("能耗监测有功电量天统计结束,结束时间："+DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss"));
+		logger.info("总耗时："+(endTime-startTime)/1000+"s");
+		logger.info("电网参数有功电量天统计结束时间："+DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss"));
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see com.mip.biz.oms.nhDataCount.service.NhDataCountService#countMonthData()
+	 */
+	@Override
+	public void countMonthData() {
+		logger.info("电网参数有功电量月统计开始时间："+DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss"));
+		List<DataRecord> clientList=this.getDao().queryForDataSet(SQL_PATH+"selectDvcPlaceGroupByClientId",null).getResults();
+		for(DataRecord c:clientList){
+		long startTime=System.currentTimeMillis();
+		String clientId=c.getString("CLIENT_ID");
+		logger.info("当前客户Id："+clientId);
+		logger.info("能耗监测有功电量月统计开始,开始时间："+DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss"));
+		Map<String,Object> map=new HashMap<String,Object>();
+		map.put("clientId",clientId);
+		List<DataRecord> placeListData=this.getDao().queryForDataSet(SQL_PATH+"selectNhPlaceListData", map).getResults();
+		//OMS_DSM_ELECTRIC_STAT_MONTH 能耗监测月统计数据
+		List<DataRecord> monthListData=this.getDao().queryForDataSet(SQL_PATH+"selectNhMonthListData", map).getResults();
+		//位置能耗月统计表
+		List<DataRecord> monthCountListData=this.getDao().queryForDataSet(SQL_PATH+"selectNhMonthCountListData", map).getResults();
+		//能耗位置信息数据
+		List<DataRecord> nhListData=this.getDao().queryForDataSet(SQL_PATH+"selectNhListData", map).getResults();
+		//告警数据
+		List<DataRecord> nhAlarmListData=this.getDao().queryForDataSet(SQL_PATH+"selectNhMonthAlarmListData", map).getResults();
+		//分组时间数据，用来判断是否已经统计过某时的数据
+		map.put("tableCode", "OMS_DSM_PLACE_STAT_MONTH");
+		map.put("timeFormat", "yyyy-MM");
+		//数据库中存在的时间数据
+		List<DataRecord> timeList=this.getDao().queryForDataSet(SQL_PATH+"selectGroupByTime",map).getResults();
+		//数据库中需要有的时间数据
+		List<DataRecord> previousHourList=TimeUtil.getPreviousMonth();
+		for(DataRecord time:previousHourList){
+			String nowOfLastTime=time.getString("CURRENTTIME");
+			String nowOfLastYear=time.getString("LASTYEARTIME");
+			String nowOfLastMonth=time.getString("LASTMONTHTIME");
+			boolean timeFlag=isExistTime(nowOfLastTime, "yyyy-MM", timeList);
+			//不存在则统计
+			if(!timeFlag){
+				countData(clientId, "month", "OMS_DSM_PLACE_STAT_MONTH", placeListData, monthListData, monthCountListData,
+						nhListData, nhAlarmListData, "yyyy-MM", nowOfLastTime, nowOfLastYear, nowOfLastMonth);
+			}
+		}
+
+		long endTime=System.currentTimeMillis();
+		logger.info("能耗监测有功电量月统计结束,结束时间："+DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss"));
+		logger.info("总耗时："+(endTime-startTime)/1000+"s");
+		logger.info("电网参数有功电量月统计结束时间："+DateUtil.format(new Date(),"yyyy-MM-dd HH:mm:ss"));
+		}
+	}
+
+	/**
+	 * 保存能耗数据
+	 * */
+	private void saveNhData(String tableCode,String placeId,String timeStr,String activePower,String yearGrowthRate,String monthGrowthRate,String clientId,
+			String yelloAlarmNumber,String redAlarmNumber) throws ServiceException{
+		logger.info("插入数据：placeId:"+placeId+",timeStr:"+timeStr+",activePower:"+activePower+",yearGrowthRate:"+yearGrowthRate+",monthGrowthRate:"+monthGrowthRate+",clientId:"+clientId+",yelloAlarmNumber:"+yelloAlarmNumber+",redAlarmNumber:"+redAlarmNumber);
+		DataRecord dr=new DataRecord();
+		dr.put("PLACE_ID",placeId);
+		try {
+			dr.put("TIME",DateUtil.parse(timeStr, "yyyy-MM-dd HH:mm:ss"));
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		dr.put("ACTIVE_POWER",activePower);
+		dr.put("YEAR_GROWTH_RATE",yearGrowthRate);
+		dr.put("MONTH_GROWTH_RATE",monthGrowthRate);
+		dr.put("RED_ALARM_NUMBER",redAlarmNumber);
+		dr.put("YELLOW_ALARM_NUMBER",yelloAlarmNumber);
+		dr.put("CLIENT_ID",clientId);
+		this.getDao().insert(tableCode, "ID", dr);
+	}
+	/**
+	 * 获得数据对象
+	 * */
+	private DataRecord getDataObj(String tableCode,String placeId,String timeStr,String activePower,String yearGrowthRate,String monthGrowthRate,String clientId,
+			String yelloAlarmNumber,String redAlarmNumber) throws ServiceException{
+		DataRecord dr=new DataRecord();
+		dr.put("ID",this.generateId(null));
+		dr.put("PLACE_ID",placeId);
+		try {
+			dr.put("TIME",DateUtil.parse(timeStr, "yyyy-MM-dd HH:mm:ss"));
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		dr.put("ACTIVE_POWER",activePower);
+		dr.put("YEAR_GROWTH_RATE",yearGrowthRate);
+		dr.put("MONTH_GROWTH_RATE",monthGrowthRate);
+		dr.put("RED_ALARM_NUMBER",redAlarmNumber);
+		dr.put("YELLOW_ALARM_NUMBER",yelloAlarmNumber);
+		dr.put("CLIENT_ID",clientId);
+
+		return dr;
+	}
+	/**
+	 * 根据逻辑节点时间获取那时最新有功电量
+	 * */
+	public double getActPowerByMonitorNodeId(String monitorNodeId,String timeStr,String pattern,List<DataRecord> listData){
+		double actPower=0;
+		String currentTime="";
+		SimpleDateFormat sdf=new SimpleDateFormat(pattern);
+		try {
+			currentTime=sdf.format(sdf.parse(timeStr));
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		for(DataRecord d:listData){
+			String monitorTime=d.getString("MONITOR_TIME");
+			if(d.getString("MONITOR_NODE_ID").equals(monitorNodeId)&&currentTime.equals(monitorTime)){
+				actPower=d.getDouble("ACT_POWER");
+				break;
+			}
+		}
+		return actPower;
+	}
+	/**
+	 * 获取告警数量
+	 * */
+	public int[] getAlarmNumByMonitorNodeId(String monitorNodeId,String timeStr,String pattern,List<DataRecord> listData){
+		int yAlarmNum=0;
+		int rAlarmNum=0;
+		int[] alarmNum=new int[2];
+		String currentTime="";
+		String dataTime="";
+		SimpleDateFormat sdf=new SimpleDateFormat(pattern);
+		try {
+			currentTime=sdf.format(sdf.parse(timeStr));
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		boolean firstFlag=false;
+		for(DataRecord d:listData){
+			if(d.getString("OBJ_ID").equals(monitorNodeId)){
+				firstFlag=true;
+				dataTime=d.getDateString("ALARM_TIME",pattern);
+				if(currentTime.equals(dataTime)){
+					if(d.getString("ALARM_LEVEL_ID")!=null&&d.getString("ALARM_LEVEL_ID").equals("1")){
+						++rAlarmNum;
+					}else if(d.getString("ALARM_LEVEL_ID")!=null&&d.getString("ALARM_LEVEL_ID").equals("2")){
+						++yAlarmNum;
+					}
+				}
+			}else if(firstFlag){
+				break;
+			}
+		}
+		alarmNum[0]=yAlarmNum;
+		alarmNum[1]=rAlarmNum;
+		return alarmNum;
+	}
+	/**
+	 *上年同比增长率
+	 * */
+	public String getYearGrowthRate(String placeId,String timeStr,String pattern,String currentPower,List<DataRecord> listData){
+		Double lastPower=0.0;
+		String lastTime="";
+		String dataTime="";
+		String growthRate="";
+		SimpleDateFormat sdf=new SimpleDateFormat(pattern);
+		try {
+			lastTime=sdf.format(sdf.parse(timeStr));
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		boolean lastFlag=false;
+		for(DataRecord d:listData){
+			dataTime=DateUtil.format(d.getDate("TIME"), pattern);
+			lastPower=d.getDouble("ACTIVE_POWER");
+			if(d.getString("PLACE_ID").equals(placeId)&&dataTime.equals(lastTime)&&lastPower!=null&&lastPower!=0){
+				lastFlag=true;
+				break;
+			}
+		}
+		if(lastFlag){
+			growthRate=NumberUtil.numberToPattern((Double.valueOf(currentPower)-lastPower)/lastPower*100);
+		}
+		return growthRate;
+	}
+	/**
+	 *上月同比增长率
+	 * */
+	public String getMonthGrowthRate(String placeId,String timeStr,String pattern,String currentPower,List<DataRecord> listData){
+		Double lastPower=0.0;
+		String lastTime="";
+		String dataTime="";
+		String growthRate="";
+		SimpleDateFormat sdf=new SimpleDateFormat(pattern);
+		try {
+			lastTime=sdf.format(sdf.parse(timeStr));
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		boolean lastFlag=false;
+
+		for(DataRecord d:listData){
+			dataTime=DateUtil.format(d.getDate("TIME"), pattern);
+			lastPower=d.getDouble("ACTIVE_POWER");
+			if(d.getString("PLACE_ID").equals(placeId)&&dataTime.equals(lastTime)&&lastPower!=null&&lastPower!=0){
+				lastFlag=true;
+				break;
+			}
+		}
+		if(lastFlag){
+			growthRate=NumberUtil.numberToPattern((Double.valueOf(currentPower)-lastPower)/lastPower*100);
+		}
+		return growthRate;
+	}
+	/**
+	 * 统计数据
+	 * */
+	public void countData(String clientId,String countType,String tableCode,List<DataRecord> placeListData,List<DataRecord> listData,
+			List<DataRecord> countListData,List<DataRecord> nhListData,List<DataRecord> nhAlarmListData,
+			String pattern,String nowOfLastTime,String nowOfLastYear,String nowOfLastMonth){
+		Map<String,DataRecord> placeMap=new HashMap<String,DataRecord>();
+		String placeId="";
+		String parentId="";
+		String monitorNodeId="";
+		double currentPower=0;
+		boolean isTotalMeter=false;
+		int[] alarmNum= new int[2];
+		String yearGrowthRate="";
+		String monthGrowthRate="";
+		int index=0;
+		for(DataRecord d:nhListData){
+			++index;
+			if(d.getString("PLACEID")!=null&&placeId==""){
+				if(!isTotalMeter){
+					currentPower+=getActPowerByMonitorNodeId(d.getString("MONITORNODEID"),nowOfLastTime,pattern,listData);
+				}
+				if(d.getString("TOTAL_METER")!=null&&d.getString("TOTAL_METER").equals("是")){
+					isTotalMeter=true;
+					currentPower=getActPowerByMonitorNodeId(d.getString("MONITORNODEID"),nowOfLastTime,pattern,listData);
+				}
+			}else if(index==nhListData.size()){
+				if(!isTotalMeter){
+					currentPower+=getActPowerByMonitorNodeId(d.getString("MONITORNODEID"),nowOfLastTime,pattern,listData);
+				}
+				if(d.getString("TOTAL_METER")!=null&&d.getString("TOTAL_METER").equals("是")){
+					isTotalMeter=true;
+					currentPower=getActPowerByMonitorNodeId(d.getString("MONITORNODEID"),nowOfLastTime,pattern,listData);
+				}
+				 alarmNum=getAlarmNumByMonitorNodeId(d.getString("MONITORNODEID"),nowOfLastTime,pattern, nhAlarmListData);
+				 yearGrowthRate=getYearGrowthRate(d.getString("PLACEID"),nowOfLastYear,pattern, currentPower+"", countListData);
+				 monthGrowthRate=getMonthGrowthRate(d.getString("PLACEID"),nowOfLastMonth,pattern, currentPower+"", countListData);
+				 DataRecord placeDr=new DataRecord();
+				 placeDr.put("parentId",d.getString("PARENTID"));
+				 placeDr.put("time",nowOfLastTime);
+				 placeDr.put("activePower",currentPower);
+				 placeDr.put("yearGrowthRate",yearGrowthRate);
+				 placeDr.put("monthGrowthRate",monthGrowthRate);
+				 placeDr.put("clientId",clientId);
+				 placeDr.put("yAlarmNum",alarmNum[0]);
+				 placeDr.put("rAlarmNum",alarmNum[1]);
+				 placeMap.put(placeId, placeDr);
+				//重新初始化数据
+				currentPower=0;
+				isTotalMeter=false;
+			}else if(d.getString("PLACEID")!=null&&d.getString("PLACEID").equals(placeId)){
+				if(!isTotalMeter){
+					currentPower+=getActPowerByMonitorNodeId(d.getString("MONITORNODEID"),nowOfLastTime,pattern,listData);
+				}
+				if(d.getString("TOTAL_METER")!=null&&d.getString("TOTAL_METER").equals("是")){
+					isTotalMeter=true;
+					currentPower=getActPowerByMonitorNodeId(d.getString("MONITORNODEID"),nowOfLastTime,pattern,listData);
+				}
+			}else if(d.getString("PLACEID")!=null&&!d.getString("PLACEID").equals(placeId)){
+				 alarmNum=getAlarmNumByMonitorNodeId(monitorNodeId,nowOfLastTime,pattern, nhAlarmListData);
+				 yearGrowthRate=getYearGrowthRate( placeId,nowOfLastYear,pattern, currentPower+"", countListData);
+				 monthGrowthRate=getMonthGrowthRate( placeId,nowOfLastMonth,pattern, currentPower+"", countListData);
+				 DataRecord placeDr=new DataRecord();
+				 placeDr.put("parentId",parentId);
+				 placeDr.put("time",nowOfLastTime);
+				 placeDr.put("activePower",currentPower);
+				 placeDr.put("yearGrowthRate",yearGrowthRate);
+				 placeDr.put("monthGrowthRate",monthGrowthRate);
+				 placeDr.put("clientId",clientId);
+				 placeDr.put("yAlarmNum",alarmNum[0]);
+				 placeDr.put("rAlarmNum",alarmNum[1]);
+				 placeMap.put(placeId, placeDr);
+				//重新初始化数据
+				currentPower=0;
+				isTotalMeter=false;
+				if(!isTotalMeter){
+					currentPower+=getActPowerByMonitorNodeId(d.getString("MONITORNODEID"),nowOfLastTime,pattern,listData);
+				}
+				if(d.getString("TOTAL_METER")!=null&&d.getString("TOTAL_METER").equals("是")){
+					isTotalMeter=true;
+					currentPower=getActPowerByMonitorNodeId(d.getString("MONITORNODEID"),nowOfLastTime,pattern,listData);
+				}
+			}
+			placeId=d.getString("PLACEID");
+			parentId=d.getString("PARENTID");
+			monitorNodeId=d.getString("MONITORNODEID");
+		}
+		//遍历每个地方数据，累加地方下的数据
+		double activePower=0;
+		int yAlarmNum=0;
+		int rAlarmNum=0;
+		for(DataRecord d:placeListData){
+			 placeId=d.getString("PLACEID");
+			 if(!placeMap.containsKey(placeId)){
+			 yearGrowthRate="";
+			 monthGrowthRate="";
+			 activePower=0;
+			 yAlarmNum=0;
+			 rAlarmNum=0;
+			 for (Map.Entry<String, DataRecord> entry : placeMap.entrySet()) {
+				 parentId=entry.getValue().getString("PARENTID");
+				 if(placeId.equals(parentId)){
+					 activePower+=entry.getValue().getDouble("ACTIVEPOWER");
+					 yAlarmNum+=entry.getValue().getInteger("YALARMNUM");
+					 rAlarmNum+=entry.getValue().getInteger("RALARMNUM");
+
+				 }
+			 }
+			 DataRecord placeDr=new DataRecord();
+			 yearGrowthRate=getYearGrowthRate( placeId,nowOfLastYear,pattern, currentPower+"", countListData);
+			 monthGrowthRate=getMonthGrowthRate( placeId,nowOfLastMonth,pattern, currentPower+"", countListData);
+			 placeDr.put("parentId",d.getString("PARENTID"));
+			 placeDr.put("time",nowOfLastTime);
+			 placeDr.put("activePower",activePower);
+			 placeDr.put("yearGrowthRate",yearGrowthRate);
+			 placeDr.put("monthGrowthRate",monthGrowthRate);
+			 placeDr.put("clientId",clientId);
+			 placeDr.put("yAlarmNum",yAlarmNum);
+			 placeDr.put("rAlarmNum",rAlarmNum);
+			 placeMap.put(placeId, placeDr);
+		}
+		}
+		List<DataRecord> placeList=new ArrayList<DataRecord>();
+		//获得数据list
+		for (Map.Entry<String, DataRecord> entry : placeMap.entrySet()) {
+			try {
+				DataRecord dr = getDataObj(tableCode,entry.getKey(),entry.getValue().getString("TIME"), entry.getValue().getString("ACTIVEPOWER"),
+						entry.getValue().getString("YEARGROWTHRATE"),
+						entry.getValue().getString("MONTHGROWTHRATE"), clientId,
+						entry.getValue().getString("YALARMNUM"), entry.getValue().getString("RALARMNUM"));
+				placeList.add(dr);
+			} catch (ServiceException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		 }
+		//批量保存数据
+		this.getDao().insertBatch(placeList, tableCode);
+	}
+
+	/**
+	 * 判断时间是否存在
+	 * */
+	public boolean isExistTime(String originalTime,String pattern,List<DataRecord> timeList){
+		boolean flag=false;
+		String destTime="";
+		try {
+			destTime=DateUtil.format(DateUtil.parse(originalTime,"yyyy-MM-dd HH:mm:ss"), pattern);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		for(DataRecord d:timeList){
+			String dataTime=d.getString("TIME");
+			if(destTime.equals(dataTime)){
+				flag=true;
+				break;
+			}
+		}
+		return flag;
+	}
+}

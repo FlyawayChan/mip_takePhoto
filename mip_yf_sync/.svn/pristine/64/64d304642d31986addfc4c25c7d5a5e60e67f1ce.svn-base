@@ -1,0 +1,117 @@
+/**
+ * Copyright (C) 2010 Guangzhou JHComn Technologies Ltd.
+ *
+ * 本代码版权归广州佳和立创科技发展有限公司所有，且受到相关的法律保护。
+ * 没有经过版权所有者的书面同意，
+ * 任何其他个人或组织均不得以任何形式将本文件或本文件的部分代码用于其他商业用途。
+ *
+ */
+package com.mip.common.auth.roleJob.service.impl;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.mip.common.auth.roleJob.service.RoleJobService;
+import com.mip.core.basebiz.dto.DataRecord;
+import com.mip.core.basebiz.dto.limit.Limit;
+import com.mip.core.basebiz.service.ServiceException;
+import com.mip.core.basebiz.service.impl.BizServiceImpl;
+import com.mip.core.util.parse.StringUtils;
+
+/**
+ * 角色职责
+ *
+ * @author licl
+ * @date 2016年3月21日 下午3:00:57
+ */
+public class RoleJobServiceImpl extends BizServiceImpl implements
+		RoleJobService {
+
+	@Override
+	public void addWorks() throws ServiceException {
+		Limit limit = Limit.createStatementLimit(SQL_PREFIX + "getAllData");
+		List<DataRecord> list = getDao().queryForDataSet(limit,false).getResults();
+		if (list != null && list.size() > 0) {
+			String today = new SimpleDateFormat("yyyy-MM-dd").format(new Date()) + " ";
+			Map<String, Object> params = new HashMap<String, Object>();
+			for (DataRecord dr : list) {
+				if (isAdd(dr)) {
+					String title = "每日任务";
+					if ("1".equals(dr.getString("PEROID_ID"))) {
+						title = "每月" + dr.getString("PEROID_DETAIL") + "任务";
+					} else if ("2".equals(dr.getString("PEROID_ID"))) {
+						String str = dr.getString("PEROID_DETAIL");
+						String[] weeks = { "一", "二", "三", "四", "五", "六", "日" };
+						for (int i = 0; i < 7; i++) {
+							str = str.replaceAll((i + 1) + "", weeks[i]);
+						}
+						title = "每周" + str + "任务";
+					} else if ("4".equals(dr.getString("PEROID_ID"))) {
+						String str = dr.getString("PEROID_DETAIL");
+						str = str.replace(",","日,").replace("-","月");
+						title = "每年" + str + "日任务";
+					}
+					params.put("taskName", title);
+					String beginTime = today + dr.getString("TIME_HHMMSS");
+					params.put("beginTime", beginTime);
+					String endTime = today + "20:00:00";
+					params.put("endTime", endTime);
+					params.put("clientId", dr.get("CLIENT_ID"));
+					params.put("roleJobId", dr.get("ID"));
+					this.getDao().insertByStatement(
+							SQL_PREFIX + "insertRoleJob", params);
+				}
+			}
+		}
+	}
+
+
+	// 验证日期是否需要添加数据
+	private boolean isAdd(DataRecord dr) {
+		if ("3".equals(dr.getString("PEROID_ID"))) {
+			return true;
+		}
+
+		String perDetail = dr.getString("PEROID_DETAIL");
+		if (StringUtils.isEmpty(perDetail)) {
+			return false;
+		}
+		Calendar c = Calendar.getInstance();
+		String[] detials = perDetail.split(",");
+		if ("1".equals(dr.getString("PEROID_ID"))) {// 月
+			String curMonth = c.get(Calendar.DAY_OF_MONTH) + "";
+			for (String str : detials) {
+				if (curMonth.equals(str)) {
+					return true;
+				}
+			}
+			return false;
+		}
+		if ("2".equals(dr.getString("PEROID_ID"))) {// 周
+			String curDay = (c.get(Calendar.DAY_OF_WEEK) - 1) + "";
+			if ("0".equals(curDay)) {
+				curDay = "7";
+			}
+			for (String str : detials) {
+				if (curDay.equals(str)) {
+					return true;
+				}
+			}
+			return false;
+		}
+		if ("4".equals(dr.getString("PEROID_ID"))) {//年
+			String md = (c.get(Calendar.MONTH) +1) + "-"+c.get(Calendar.DAY_OF_MONTH);
+			for (String str : detials) {
+				if (md.equals(str)) {
+					return true;
+				}
+			}
+			return false;
+		}
+		return false;
+	}
+}

@@ -1,0 +1,60 @@
+package com.mip.biz.oms.yf_sync.db;
+
+import java.sql.*;
+
+public class DBUtils {
+
+    public static Connection getConnection(){
+        Connection conn = null;
+        try {
+            //初始化驱动类com.mysql.jdbc.Driver
+            Class.forName("com.mysql.jdbc.Driver");
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/yd_oms?characterEncoding=UTF-8","root", "User@123");
+            //该类就在 mysql-connector-java-5.0.8-bin.jar中,如果忘记了第一个步骤的导包，就会抛出ClassNotFoundException
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return conn;
+    }
+
+    public static void close(Connection conn){
+        if(conn != null){
+            try {
+                conn.close();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void main(String[] args) throws Exception{
+        String sql; // 用于后面对应不同的sql语句
+        Connection connection = getConnection(); // 获取一个connection
+        /**
+         * 创建一个statement
+         * Statement里面带有很多方法，比如executeUpdate可以实现插入，更新和删除
+         * executeQuery可以实现查询
+         */
+        Statement statement = connection.createStatement();
+
+        int updateResult ; // 用于获取是否创建成功 如果不成功结果为-1
+        try {
+            sql = "SELECT * FROM yyzh_zygk_zyjh where gzfzr = '练志刚'";
+            PreparedStatement prst = connection.prepareStatement(sql);
+            //结果集
+            ResultSet rs = prst.executeQuery();
+            while (rs.next()) {
+                System.out.println("施工内容:" + rs.getString("sgnr"));
+            }
+            rs.close();
+            prst.close();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        connection.close();
+    }
+
+}

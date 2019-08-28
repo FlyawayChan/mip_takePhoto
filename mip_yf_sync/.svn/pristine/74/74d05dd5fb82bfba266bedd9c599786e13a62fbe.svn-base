@@ -1,0 +1,52 @@
+package com.mip.biz.oms.yf_sync.db;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.Properties;
+
+public class PropertiesUtil {
+    static Properties properties = new Properties();
+
+    public PropertiesUtil() {
+    }
+
+    public static boolean loadFile(String fileName){
+        try {
+            properties.load(PropertiesUtil.class.getClassLoader().getResourceAsStream(fileName));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    public static String getPropertyValue(String key){
+        return properties.getProperty(key);
+    }
+
+    public static void main(String[] args) throws Exception{
+        Connection conn = null;
+        PropertiesUtil propertiesUtil = new PropertiesUtil();
+
+        propertiesUtil.loadFile("config/mysql-db.properties");
+        String driver = propertiesUtil.getPropertyValue("driver");
+        String url = propertiesUtil.getPropertyValue("url");
+        String username  = propertiesUtil.getPropertyValue("username");
+        String password = propertiesUtil.getPropertyValue("password");
+
+        try {
+            //初始化驱动类com.mysql.jdbc.Driver
+            Class.forName(driver);
+            conn = DriverManager.getConnection(url,username, password);
+            //该类就在 mysql-connector-java-5.0.8-bin.jar中,如果忘记了第一个步骤的导包，就会抛出ClassNotFoundException
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+}

@@ -1,0 +1,12 @@
+package com.mip.biz.oms.yf_sync.service.impl;
+
+import com.mip.biz.oms.yf_sync.service.yfSyncService;
+import com.mip.core.util.ServiceLocator;
+
+public class yfSyncDayDataJob {
+    public void execute() throws Exception {
+        yfSyncService ysService = (yfSyncService) ServiceLocator
+                .getBean(yfSyncService.class.getName());
+        ysService.countDayData();
+    }
+}

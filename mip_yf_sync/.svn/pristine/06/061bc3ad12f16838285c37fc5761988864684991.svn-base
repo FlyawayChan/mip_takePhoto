@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+    "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="com.mip.biz.oms.dmpManage.dmpQuartz">
+
+    <select id="getHourUnSaveELData" resultType="datarecord">
+    <![CDATA[
+    	select a.MONITOR_NODE_ID,MONITOR_NODE_NAME ,
+    			MONITOR_ID,SENSOR_ID,to_date(monitorTime||':00:00','yyyy-MM-dd hh24:mi:ss') as MONITOR_TIME,minAct,minidle,minTime,
+    			sysdate as CREATE_TIME,client_id,'时' as stat_type,nvl(cf.monitor_period,'0')*overload_time as overload_time,
+    			nvl(cf.monitor_period,'0')*heavyload_time as heavyload_time,rated_power
+    			from (
+    		select  d.MONITOR_NODE_ID,d.MONITOR_NODE_NAME,d.MONITOR_ID,d.SENSOR_ID,d.CLIENT_ID,
+    			to_char(monitor_time,'yyyy-MM-dd HH24') as monitorTime ,
+    			min(FORWARD_ACT_POWER_TOTAL) as minAct,
+                min(FORWARD_IDLE_POWER_TOTAL) as minidle,
+                min(monitor_time) minTime,
+    			max(rated_power)  as rated_power,
+    				 sum(
+    			  case   when (POW_FAC_TOTAL/rated_power)>=1 then 1
+    			  else 0 end
+    			 )as overload_time,
+    			  sum(
+    			  case   when ( (POW_FAC_TOTAL/rated_power)>=0.8 and (POW_FAC_TOTAL/rated_power)<1) then 1
+    			  else 0 end
+    			 ) as heavyload_time
+    			from  OMS_DSM_ELECTRIC_COMMONLY_DATA   d ,
+    		(select node.id,node.client_id,y.rated_power from OMS_MONITOR_NODE node left join
+    			OMS_EEM_MONITOR_NODE_EP_ENERGY y
+    			on node.id=y.id and node.sensor_type_id=8
+    			) n
+    			where n.rated_power is not  null and n.client_id=d.client_id  and d.monitor_node_id=n.id and monitor_time between
+    			to_date(to_char(sysdate-7,'yyyy-MM-dd HH24'),'yyyy-MM-dd HH24')
+    			and to_date(to_char(sysdate,'yyyy-MM-dd HH24'),'yyyy-MM-dd HH24') and d.client_id=#{client_id}
+    			group by d.MONITOR_NODE_ID,d.MONITOR_NODE_NAME,d.MONITOR_ID,d.SENSOR_ID,d.CLIENT_ID
+    			,to_char(monitor_time,'yyyy-MM-dd HH24')
+    			union all
+    		select  d.MONITOR_NODE_ID,d.MONITOR_NODE_NAME,d.MONITOR_ID,d.SENSOR_ID,d.CLIENT_ID,to_char(monitor_time,'yyyy-MM-dd HH24') as monitorTime ,
+    			min(FORWARD_ACT_POWER_TOTAL) as minAct,
+                min(FORWARD_IDLE_POWER_TOTAL) as minidle,
+                min(monitor_time) minTime,
+    			null as rated_power,
+    			 0 as overload_time,0 as heavyload_time
+    			from  OMS_DSM_ELECTRIC_COMMONLY_DATA d ,
+    		(select node.id,node.client_id,y.rated_power from OMS_MONITOR_NODE node left join
+    			OMS_EEM_MONITOR_NODE_EP_ENERGY y
+    			on node.id=y.id and node.sensor_type_id=8
+    			) n
+    			where n.rated_power is  null and n.client_id=d.client_id  and d.monitor_node_id=n.id and monitor_time
+    			between to_date(to_char(sysdate-7,'yyyy-MM-dd HH24'),'yyyy-MM-dd HH24')
+    			and to_date(to_char(sysdate,'yyyy-MM-dd HH24'),'yyyy-MM-dd HH24')  and d.client_id=#{client_id}
+    			group by d.MONITOR_NODE_ID,d.MONITOR_NODE_NAME,d.MONITOR_ID,d.SENSOR_ID,d.CLIENT_ID
+          ,to_char(monitor_time,'yyyy-MM-dd HH24')
+          ) a
+          left join OMS_MONITOR_NODE_CF cf
+          on cf.monitor_node_id=a.monitor_node_id
+          where 1=1 and not exists
+        (
+        select 1 from OMS_DSM_ELECTRIC_STAT_OTHER o where
+          a.monitor_node_id=o.monitor_node_id and a.client_id=o.client_id and o.client_id=#{client_id}
+          and a.monitorTime=to_char(o.MONITOR_TIME,'yyyy-MM-dd HH24') and stat_type='时'
+           and o.monitor_time >=
+               to_date(to_char(sysdate-7, 'yyyy-MM-dd HH24'),
+                       'yyyy-MM-dd HH24') and o.monitor_time<=
+               to_date(to_char(sysdate, 'yyyy-MM-dd HH24'),
+                       'yyyy-MM-dd HH24')
+        )
+        order by monitor_node_id,monitor_time
+	  ]]>
+    </select>
+    <select id="getClientInfo" resultType="datarecord">
+       select client_id,count(1) as cNum from OMS_MONITOR_NODE
+       group by client_id
+    </select>
+
+    <select id="getDayUnSaveELData" parameterType="map" resultType="datarecord">
+    	select a.MONITOR_NODE_ID,MONITOR_NODE_NAME , minAct,minidle,minTime,,maxAct,maxidle,maxTime,
+    MONITOR_ID,SENSOR_ID,to_date(monitorTime||' 00:00:00','yyyy-MM-dd hh24:mi:ss') as MONITOR_TIME,
+    sysdate as CREATE_TIME,client_id, nvl(cf.monitor_period,'0')*overload_time as overload_time,
+    nvl(cf.monitor_period,'0')*heavyload_time as heavyload_time,rated_power
+    from (
+  select  d.MONITOR_NODE_ID,d.MONITOR_NODE_NAME,d.MONITOR_ID,d.SENSOR_ID,d.CLIENT_ID,to_char(monitor_time,'yyyy-MM-dd') as monitorTime ,
+       min(ACT_ELECTRIC_METER_NUMBER) as minAct,
+                  min(ACT_ELECTRIC_METER1_NUMBER) as minidle,
+               min(monitor_time) minTime,
+                 max(ACT_ELECTRIC_METER_NUMBER) as maxAct,
+                  max(IDLE_ELECTRIC_METER1_NUMBER) as maxidle,
+               max(monitor_time) maxTime,
+    max(rated_power)  as rated_power,
+     sum(overload_time)as overload_time,
+      sum(heavyload_time) as heavyload_time
+    from  OMS_DSM_ELECTRIC_STAT_OTHER d where d.STAT_TYPE='时'
+    and rated_power is not  null and d.client_id=#{client_id} and monitor_time between to_date(to_char(add_months(sysdate,-1),'yyyy-MM-dd'),'yyyy-MM-dd')
+    and to_date(to_char(sysdate,'yyyy-MM-dd'),'yyyy-MM-dd')
+    group by d.MONITOR_NODE_ID,d.MONITOR_NODE_NAME,d.MONITOR_ID,d.SENSOR_ID,d.CLIENT_ID
+    ,to_char(monitor_time,'yyyy-MM-dd')
+    union all
+  select  d.MONITOR_NODE_ID,d.MONITOR_NODE_NAME,d.MONITOR_ID,d.SENSOR_ID,d.CLIENT_ID,to_char(monitor_time,'yyyy-MM-dd') as monitorTime ,
+      min(ACT_ELECTRIC_METER_NUMBER) as minAct,
+                  min(ACT_ELECTRIC_METER1_NUMBER) as minidle,
+               min(monitor_time) minTime,
+                 max(ACT_ELECTRIC_METER_NUMBER) as maxAct,
+                  max(IDLE_ELECTRIC_METER1_NUMBER) as maxidle,
+               max(monitor_time) maxTime,
+    null as rated_power,
+     0 as overload_time,0 as heavyload_time
+    from  OMS_DSM_ELECTRIC_STAT_OTHER d where d.STAT_TYPE='时'
+    and rated_power is  null and d.client_id=#{client_id}  and monitor_time between to_date(to_char(add_months(sysdate,-1),'yyyy-MM-dd'),'yyyy-MM-dd')
+    and to_date(to_char(sysdate,'yyyy-MM-dd'),'yyyy-MM-dd')
+    group by d.MONITOR_NODE_ID,d.MONITOR_NODE_NAME,d.MONITOR_ID,d.SENSOR_ID,d.CLIENT_ID
+    ,to_char(monitor_time,'yyyy-MM-dd')
+    ) a
+    left join OMS_MONITOR_NODE_CF cf
+    on cf.monitor_node_id=a.monitor_node_id
+    where 1=1
+    and not exists
+  (
+  select 1 from OMS_DSM_ELECTRIC_STAT_DAY o where
+    a.monitor_node_id=o.monitor_node_id and a.client_id=o.client_id and o.client_id=#{client_id}
+    and a.monitorTime=to_char(o.MONITOR_TIME,'yyyy-MM-dd')
+    and o.monitor_time between to_date(to_char(add_months(sysdate,-1),'yyyy-MM-dd'),'yyyy-MM-dd')
+    and to_date(to_char(sysdate,'yyyy-MM-dd'),'yyyy-MM-dd')
+    )
+      order by monitor_node_id,monitor_time
+    </select>
+
+    <select id="getMonthUnSaveELData" parameterType="map" resultType="datarecord">
+    	select a.MONITOR_NODE_ID,MONITOR_NODE_NAME ,  minAct,minidle,minTime,,maxAct,maxidle,maxTime,
+		MONITOR_ID,SENSOR_ID,to_date(monitorTIme||'-01 00:00:00','yyyy-MM-dd hh24:mi:ss') as MONITOR_TIME,
+		sysdate as CREATE_TIME,client_id,nvl(cf.monitor_period,'0')*overload_time as overload_time,
+		nvl(cf.monitor_period,'0')*heavyload_time as heavyload_time,rated_power
+		from (
+		select  d.MONITOR_NODE_ID,d.MONITOR_NODE_NAME,d.MONITOR_ID,d.SENSOR_ID,d.CLIENT_ID,to_char(monitor_time,'yyyy-MM') as monitorTime ,
+		 min(ACT_ELECTRIC_METER_NUMBER) as minAct,
+                  min(ACT_ELECTRIC_METER1_NUMBER) as minidle,
+               min(monitor_time) minTime,
+                 max(ACT_ELECTRIC_METER_NUMBER) as maxAct,
+                  max(IDLE_ELECTRIC_METER1_NUMBER) as maxidle,
+               max(monitor_time) maxTime,
+		max(rated_power)  as rated_power,
+		 sum(overload_time)as overload_time,
+		  sum(heavyload_time) as heavyload_time
+		from  OMS_DSM_ELECTRIC_STAT_OTHER d where d.STAT_TYPE='时'
+		where rated_power is not null and d.client_id=#{client_id} and monitor_time between to_date(#{startTime},'yyyy-MM-dd hh24:mi:ss')
+		and  to_date(#{endTime},'yyyy-MM-dd hh24:mi:ss')
+		group by d.MONITOR_NODE_ID,d.MONITOR_NODE_NAME,d.MONITOR_ID,d.SENSOR_ID,d.CLIENT_ID
+		,to_char(monitor_time,'yyyy-MM')
+		union all
+		select  d.MONITOR_NODE_ID,d.MONITOR_NODE_NAME,d.MONITOR_ID,d.SENSOR_ID,d.CLIENT_ID,to_char(monitor_time,'yyyy-MM') as monitorTime ,
+		 min(ACT_ELECTRIC_METER_NUMBER) as minAct,
+                  min(ACT_ELECTRIC_METER1_NUMBER) as minidle,
+               min(monitor_time) minTime,
+                 max(ACT_ELECTRIC_METER_NUMBER) as maxAct,
+                  max(IDLE_ELECTRIC_METER1_NUMBER) as maxidle,
+               max(monitor_time) maxTime,
+    null as rated_power,
+     0 as overload_time,0 as heavyload_time
+    from  OMS_DSM_ELECTRIC_STAT_OTHER d where d.STAT_TYPE='时'
+    where rated_power is null and d.client_id=#{client_id} and monitor_time between to_date(#{startTime},'yyyy-MM-dd hh24:mi:ss')
+    and  to_date(#{endTime},'yyyy-MM-dd hh24:mi:ss')
+    group by d.MONITOR_NODE_ID,d.MONITOR_NODE_NAME,d.MONITOR_ID,d.SENSOR_ID,d.CLIENT_ID
+    ,to_char(monitor_time,'yyyy-MM')
+    ) a
+    left join OMS_MONITOR_NODE_CF cf
+    on cf.monitor_node_id=a.monitor_node_id
+    where 1=1
+        and not exists
+    (
+    select 1 from OMS_DSM_ELECTRIC_STAT_MONTH o where
+    a.monitor_node_id=o.monitor_node_id and a.client_id=o.client_id
+    and a.monitorTime=to_char(o.MONITOR_TIME,'yyyy-MM')
+    and o.monitor_time between to_date(#{startTime},'yyyy-MM-dd hh24:mi:ss')
+    and  to_date(#{endTime},'yyyy-MM-dd hh24:mi:ss')
+    )
+      order by monitor_node_id,monitor_time
+    </select>
+    <select id="getYearUnSaveELData" resultType="datarecord">
+    <![CDATA[
+        select a.MONITOR_NODE_ID,MONITOR_NODE_NAME , minAct,minidle,minTime,,maxAct,maxidle,maxTime,
+		MONITOR_ID,SENSOR_ID,to_date(monitorTIme||'01-01 00:00:00','yyyy-MM-dd hh24:mi:ss') as MONITOR_TIME,
+		sysdate as CREATE_TIME,client_id,overload_time,heavyload_time,rated_power,'年' as stat_type
+		from (
+		select  d.MONITOR_NODE_ID,d.MONITOR_NODE_NAME,d.MONITOR_ID,d.SENSOR_ID,d.CLIENT_ID,to_char(monitor_time,'yyyy') as monitorTime ,
+		 min(ACT_ELECTRIC_METER_NUMBER) as minAct,
+                  min(ACT_ELECTRIC_METER1_NUMBER) as minidle,
+               min(monitor_time) minTime,
+                 max(ACT_ELECTRIC_METER_NUMBER) as maxAct,
+                  max(IDLE_ELECTRIC_METER1_NUMBER) as maxidle,
+               max(monitor_time) maxTime,
+		max(rated_power)  as rated_power,
+			 sum(overload_time)as overload_time,
+		  sum(heavyload_time) as heavyload_time
+		from  OMS_DSM_ELECTRIC_STAT_MONTH d
+		where rated_power is not null and d.client_id=#{client_id} and monitor_time between to_date(#{startTime},'yyyy-MM-dd hh24:mi:ss')
+		and  to_date(#{endTime},'yyyy-MM-dd hh24:mi:ss')
+		group by d.MONITOR_NODE_ID,d.MONITOR_NODE_NAME,d.MONITOR_ID,d.SENSOR_ID,d.CLIENT_ID
+		,to_char(monitor_time,'yyyy')
+		union all
+		select  d.MONITOR_NODE_ID,d.MONITOR_NODE_NAME,d.MONITOR_ID,d.SENSOR_ID,d.CLIENT_ID,to_char(monitor_time,'yyyy') as monitorTime ,
+	 min(ACT_ELECTRIC_METER_NUMBER) as minAct,
+                  min(ACT_ELECTRIC_METER1_NUMBER) as minidle,
+               min(monitor_time) minTime,
+                 max(ACT_ELECTRIC_METER_NUMBER) as maxAct,
+                  max(IDLE_ELECTRIC_METER1_NUMBER) as maxidle,
+               max(monitor_time) maxTime,
+		null as rated_power,
+		 0 as overload_time,0 as heavyload_time
+		from  OMS_DSM_ELECTRIC_STAT_MONTH d
+		where rated_power is null and d.client_id=#{client_id} and monitor_time between  to_date(#{startTime},'yyyy-MM-dd hh24:mi:ss')
+		and  to_date(#{endTime},'yyyy-MM-dd hh24:mi:ss')
+    group by d.MONITOR_NODE_ID,d.MONITOR_NODE_NAME,d.MONITOR_ID,d.SENSOR_ID,d.CLIENT_ID
+    ,to_char(monitor_time,'yyyy')
+    ) a
+    where 1=1 and not exists
+    (
+    select 1 from OMS_DSM_ELECTRIC_STAT_OTHER o where
+    a.monitor_node_id=o.monitor_node_id and a.client_id=o.client_id and o.client_id=#{client_id}
+    and a.monitorTime=to_char(o.MONITOR_TIME,'yyyy') and stat_type='年'
+    and o.monitor_time between to_date(#{startTime},'yyyy-MM-dd hh24:mi:ss')
+    and  to_date(#{endTime},'yyyy-MM-dd hh24:mi:ss')
+    )
+      order by monitor_node_id,monitor_time
+          ]]>
+    </select>
+</mapper>

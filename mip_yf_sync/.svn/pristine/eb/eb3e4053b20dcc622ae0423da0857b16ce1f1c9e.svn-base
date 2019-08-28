@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+    "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.mip.biz.oms.nhDataCount">
+	<select id="selectNhListData" parameterType="map" resultType="datarecord">
+		select dp.id as placeId,dp.place_name as placeName,dp.place_type_id as placeTypeId,dp.parentid,
+		  omn.id as monitorNodeId,omn.monitor_node_name as monitorNodeName,omn.alarm_level_id as alarmLevelId,
+		  omnee.rated_power,omnee.total_meter
+		 from YD_DEV.DVC_PLACE dp left join OMS_MONITOR_NODE omn on dp.id=omn.obj_id
+		 left join OMS_MONITOR_NODE_EXTEND_ENERGY omnee on omnee.id=omn.id
+		 where omn.obj_type=2 and dp.client_id=${clientId} and omn.client_id=${clientId}
+		 and omn.sensor_type_id=8
+		 order by dp.id,dp.place_type_id,omn.sensor_type_id asc
+	</select>
+	<select id="selectNhHourListData" parameterType="map" resultType="datarecord">
+		    select t1.monitor_node_id,to_char(t1.monitor_time,'yyyy-MM-dd hh24') monitor_time,t1.act_power
+             from OMS_DSM_ELECTRIC_STAT_OTHER t1 where t1.CLIENT_ID=${clientId} and t1.stat_type='时'
+             and t1.monitor_time between trunc(add_months(sysdate,-2),'MM') and trunc(add_months(sysdate,+1),'MM')
+             and exists (
+               select 1
+				 from YD_DEV.DVC_PLACE dp left join OMS_MONITOR_NODE omn on dp.id=omn.obj_id
+				 left join OMS_MONITOR_NODE_EXTEND_ENERGY omnee on omnee.id=omn.id
+				 where omn.obj_type=2 and dp.client_id=${clientId} and omn.client_id=${clientId} and omn.id=t1.monitor_node_id
+				 and omn.sensor_type_id=8
+               )
+             <!--
+             and not exists(
+              select 1 from OMS_DSM_PLACE_STAT_HOUR t2 where t2.client_id=${clientId}
+              and t2.time between trunc(add_months(sysdate,-2),'MM') and trunc(add_months(sysdate,+1),'MM')
+              and to_char(t2.time,'yyyy-MM-dd hh24')=to_char(t1.monitor_time,'yyyy-MM-dd hh24')
+              group by to_char(t2.time,'yyyy-MM-dd hh24')
+             )
+             order by t1.monitor_node_id,t1.monitor_time desc
+              -->
+	</select>
+	<select id="selectNhHourCountListData" parameterType="map" resultType="datarecord">
+		  select * from(
+		    select * from OMS_DSM_PLACE_STAT_HOUR t where t.CLIENT_ID=${clientId}
+		    and t.time between trunc(add_months(sysdate,-3),'MM') and trunc(add_months(sysdate,+1),'MM')
+		    and exists (
+               select 1
+				 from YD_DEV.DVC_PLACE dp left join OMS_MONITOR_NODE omn on dp.id=omn.obj_id
+				 left join OMS_MONITOR_NODE_EXTEND_ENERGY omnee on omnee.id=omn.id
+				 where omn.obj_type=2 and dp.client_id=${clientId} and omn.client_id=${clientId} and dp.id=t.place_id
+				 and omn.sensor_type_id=8
+               )
+		    union all
+		    select * from OMS_DSM_PLACE_STAT_HOUR t where t.CLIENT_ID=${clientId}
+		    and t.time between trunc(add_months(sysdate,-14),'MM') and trunc(add_months(sysdate,-11),'MM')
+		    and exists (
+               select 1
+				 from YD_DEV.DVC_PLACE dp left join OMS_MONITOR_NODE omn on dp.id=omn.obj_id
+				 left join OMS_MONITOR_NODE_EXTEND_ENERGY omnee on omnee.id=omn.id
+				 where omn.obj_type=2 and dp.client_id=${clientId} and omn.client_id=${clientId} and dp.id=t.place_id
+				 and omn.sensor_type_id=8
+               )
+		  )
+		  <!-- order by time desc -->
+	</select>
+	<select id="selectNhDayListData" parameterType="map" resultType="datarecord">
+		select t1.monitor_node_id,to_char(t1.monitor_time,'yyyy-MM-dd') monitor_time,sum(t1.act_power) act_power
+         from OMS_DSM_ELECTRIC_STAT_DAY t1 where 1=1 and t1.CLIENT_ID=${clientId}
+         and t1.monitor_time between trunc(add_months(sysdate,-2),'MM') and trunc(add_months(sysdate,+1),'MM')
+         and exists (
+               select 1
+				 from YD_DEV.DVC_PLACE dp left join OMS_MONITOR_NODE omn on dp.id=omn.obj_id
+				 left join OMS_MONITOR_NODE_EXTEND_ENERGY omnee on omnee.id=omn.id
+				 where omn.obj_type=2 and dp.client_id=${clientId} and omn.client_id=${clientId} and omn.id=t1.monitor_node_id
+				 and omn.sensor_type_id=8
+               )
+         group by t1.monitor_node_id,to_char(t1.monitor_time,'yyyy-MM-dd')
+         <!--
+         and not exists(
+          select 1 from OMS_DSM_PLACE_STAT_DAY t2 where t2.client_id=${clientId}
+          and t2.time between trunc(add_months(sysdate,-2),'MM') and trunc(add_months(sysdate,+1),'MM')
+          and to_char(t2.time,'yyyy-MM-dd')=to_char(t1.monitor_time,'yyyy-MM-dd')
+          group by to_char(t2.time,'yyyy-MM-dd')
+          )
+           order by t1.monitor_node_id,to_char(t1.monitor_time,'yyyy-MM-dd') desc
+          -->
+	</select>
+	<select id="selectNhDayCountListData" parameterType="map" resultType="datarecord">
+		 select * from(
+			select * from OMS_DSM_PLACE_STAT_DAY t1 where t1.CLIENT_ID=${clientId}
+			and t1.time between trunc(add_months(sysdate,-3),'MM') and trunc(add_months(sysdate,+1),'MM')
+			and exists (
+               select 1
+				 from YD_DEV.DVC_PLACE dp left join OMS_MONITOR_NODE omn on dp.id=omn.obj_id
+				 left join OMS_MONITOR_NODE_EXTEND_ENERGY omnee on omnee.id=omn.id
+				 where omn.obj_type=2 and dp.client_id=${clientId} and omn.client_id=${clientId} and dp.id=t1.place_id
+				 and omn.sensor_type_id=8
+               )
+			union all
+			select * from OMS_DSM_PLACE_STAT_DAY t1 where t1.CLIENT_ID=${clientId}
+			and t1.time between trunc(add_months(sysdate,-14),'MM') and trunc(add_months(sysdate,-11),'MM')
+			and exists (
+               select 1
+				 from YD_DEV.DVC_PLACE dp left join OMS_MONITOR_NODE omn on dp.id=omn.obj_id
+				 left join OMS_MONITOR_NODE_EXTEND_ENERGY omnee on omnee.id=omn.id
+				 where omn.obj_type=2 and dp.client_id=${clientId} and omn.client_id=${clientId} and dp.id=t1.place_id
+				 and omn.sensor_type_id=8
+               )
+		   )
+		   <!-- order by time desc -->
+	</select>
+	<select id="selectNhMonthListData" parameterType="map" resultType="datarecord">
+		select t1.monitor_node_id,to_char(t1.monitor_time,'yyyy-MM') monitor_time,sum(t1.act_power) act_power
+        from OMS_DSM_ELECTRIC_STAT_MONTH t1 where 1=1 and t1.CLIENT_ID=${clientId}
+        and t1.monitor_time between trunc(add_months(sysdate,-2),'MM') and trunc(add_months(sysdate,0),'MM')
+        and exists (
+               select 1
+				 from YD_DEV.DVC_PLACE dp left join OMS_MONITOR_NODE omn on dp.id=omn.obj_id
+				 left join OMS_MONITOR_NODE_EXTEND_ENERGY omnee on omnee.id=omn.id
+				 where omn.obj_type=2 and dp.client_id=4 and omn.client_id=4 and omn.id=t1.monitor_node_id
+				 and omn.sensor_type_id=8
+               )
+        group by t1.monitor_node_id,to_char(t1.monitor_time,'yyyy-MM')
+         <!--
+        and not exists(
+           select 1 from OMS_DSM_PLACE_STAT_MONTH t2 where t2.client_id=${clientId}
+           and t2.time between trunc(add_months(sysdate,-2),'MM') and trunc(add_months(sysdate,0),'MM')
+           and to_char(t2.time,'yyyy-MM')=to_char(t1.monitor_time,'yyyy-MM')
+           group by to_char(t2.time,'yyyy-MM')
+        )
+        order by t1.monitor_node_id,to_char(t1.monitor_time,'yyyy-MM') desc
+         -->
+	</select>
+	<select id="selectNhMonthCountListData" parameterType="map" resultType="datarecord">
+	 	   select * from(
+		    select * from OMS_DSM_PLACE_STAT_MONTH t1 where t1.CLIENT_ID=${clientId}
+			and t1.time between trunc(add_months(sysdate,-3),'MM') and trunc(add_months(sysdate,0),'MM')
+			and exists (
+               select 1
+				 from YD_DEV.DVC_PLACE dp left join OMS_MONITOR_NODE omn on dp.id=omn.obj_id
+				 left join OMS_MONITOR_NODE_EXTEND_ENERGY omnee on omnee.id=omn.id
+				 where omn.obj_type=2 and dp.client_id=4 and omn.client_id=4 and dp.id=t1.place_id
+				 and omn.sensor_type_id=8
+               )
+			union all
+			select * from OMS_DSM_PLACE_STAT_MONTH t1 where t1.CLIENT_ID=${clientId}
+			and t1.time between trunc(add_months(sysdate,-14),'MM') and trunc(add_months(sysdate,-12),'MM')
+			and exists (
+               select 1
+				 from YD_DEV.DVC_PLACE dp left join OMS_MONITOR_NODE omn on dp.id=omn.obj_id
+				 left join OMS_MONITOR_NODE_EXTEND_ENERGY omnee on omnee.id=omn.id
+				 where omn.obj_type=2 and dp.client_id=4 and omn.client_id=4 and dp.id=t1.place_id
+				 and omn.sensor_type_id=8
+               )
+			)
+			<!-- order by time desc -->
+	</select>
+	<select id="selectNhHourAlarmListData" parameterType="map" resultType="datarecord">
+	     select * from AC_ALARM aa where client_id=${clientId} and aa.alarm_type_id=7 and aa.obj_type=3
+		   and aa.alarm_time between trunc(add_months(SYSDATE,-2),'MM') and trunc(add_months(SYSDATE,+1),'MM')
+		   and exists (
+               select 1
+				 from YD_DEV.DVC_PLACE dp left join OMS_MONITOR_NODE omn on dp.id=omn.obj_id
+				 left join OMS_MONITOR_NODE_EXTEND_ENERGY omnee on omnee.id=omn.id
+				 where omn.obj_type=2 and dp.client_id=4 and omn.client_id=4 and omn.id=aa.obj_id
+				 and omn.sensor_type_id=8
+               )
+		   order by obj_id,alarm_time desc
+		   <!--
+		   and not exists(
+			select 1 from OMS_DSM_PLACE_STAT_HOUR t where t.client_id=${clientId}
+			and t.time between trunc(add_months(SYSDATE,-2),'MM') and trunc(add_months(SYSDATE,+1),'MM')
+			and to_char(t.time,'yyyy-MM-dd hh24')=to_char(aa.alarm_time,'yyyy-MM-dd hh24')
+	        group by to_char(t.time,'yyyy-MM-dd hh24')
+		   )
+		   -->
+
+	</select>
+	<select id="selectNhDayAlarmListData" parameterType="map" resultType="datarecord">
+	       select * from AC_ALARM aa where client_id=${clientId} and aa.alarm_type_id=7 and aa.obj_type=3
+           and aa.alarm_time between trunc(add_months(SYSDATE,-2),'MM') and trunc(add_months(SYSDATE,+1),'MM')
+           and exists (
+               select 1
+				 from YD_DEV.DVC_PLACE dp left join OMS_MONITOR_NODE omn on dp.id=omn.obj_id
+				 left join OMS_MONITOR_NODE_EXTEND_ENERGY omnee on omnee.id=omn.id
+				 where omn.obj_type=2 and dp.client_id=4 and omn.client_id=4 and omn.id=aa.obj_id
+				 and omn.sensor_type_id=8
+               )
+           order by obj_id,alarm_time desc
+           <!--
+           and not exists(
+           select 1 from OMS_DSM_PLACE_STAT_DAY t where t.client_id=${clientId}
+           and t.time between trunc(add_months(SYSDATE,-2),'MM') and trunc(add_months(SYSDATE,+1),'MM')
+           and to_char(t.time,'yyyy-MM-dd')=to_char(aa.alarm_time,'yyyy-MM-dd')
+           group by to_char(t.time,'yyyy-MM-dd')
+           )
+           -->
+	</select>
+	<select id="selectNhMonthAlarmListData" parameterType="map" resultType="datarecord">
+	     select * from AC_ALARM aa where client_id=${clientId} and aa.alarm_type_id=7 and aa.obj_type=3
+         and aa.alarm_time between trunc(add_months(SYSDATE,-2),'MM') and trunc(add_months(SYSDATE,0),'MM')
+         and exists (
+               select 1
+				 from YD_DEV.DVC_PLACE dp left join OMS_MONITOR_NODE omn on dp.id=omn.obj_id
+				 left join OMS_MONITOR_NODE_EXTEND_ENERGY omnee on omnee.id=omn.id
+				 where omn.obj_type=2 and dp.client_id=4 and omn.client_id=4 and omn.id=aa.obj_id
+				 and omn.sensor_type_id=8
+               )
+         order by obj_id,alarm_time desc
+         <!--
+         and not exists(
+         select 1 time from OMS_DSM_PLACE_STAT_MONTH t where t.client_id=${clientId}
+          and t.time between trunc(add_months(SYSDATE,-2),'MM') and trunc(add_months(SYSDATE,0),'MM')
+          and to_char(t.time,'yyyy-MM')=to_char(aa.alarm_time,'yyyy-MM')
+          group by to_char(t.time,'yyyy-MM')
+         )
+         -->
+	</select>
+	<select id="selectNhPlaceListData" parameterType="map" resultType="datarecord">
+	     select a.ID placeid,a.node_name,a.parentid,a.node_type, level leaf
+	      from (SELECT * FROM YD_DEV.V_PLACE_DEVICE_DMP)   a where a.node_type='PLACE' and a.client_id=${clientId}
+	      start with a.parentid is null
+	      connect by a.parentid = prior a.id
+	      order by leaf desc
+	</select>
+	<select id="selectGroupByTime" parameterType="map" resultType="datarecord">
+	      select to_char(t.time,'${timeFormat}') time from ${tableCode} t where t.client_id=${clientId}
+	        and t.time between trunc(add_months(SYSDATE,-2),'MM') and trunc(add_months(SYSDATE,+1),'MM')
+	        group by to_char(t.time,'${timeFormat}')
+	        <!--  order by to_char(t.time,'${timeFormat}') desc -->
+	</select>
+	<select id="selectDvcPlaceGroupByClientId" parameterType="map" resultType="datarecord">
+		 select client_id from YD_DEV.DVC_PLACE group by client_id
+	</select>
+</mapper>

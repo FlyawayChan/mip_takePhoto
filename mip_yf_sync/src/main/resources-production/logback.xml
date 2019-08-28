@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration>
+
+<configuration>
+	<jmxConfigurator />
+	<timestamp key="yyyyMM" datePattern="yyyyMM"/>
+
+    <!-- 文件输出日志 (文件大小策略进行文件输出，超过指定大小对文件备份)-->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <OnMismatch>ACCEPT</OnMismatch>
+            <OnMatch>DENY</OnMatch>
+        </filter>
+        <File>D:\youdian\log2018\mip_schedule_task.log</File>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+		  <fileNamePattern>D:\youdian\log2018\${yyyyMM}\mip_schedule_task-%d{yyyy-MM-dd}.%i.txt</fileNamePattern>
+		   <maxFileSize>100MB</maxFileSize>    
+		   <maxHistory>60</maxHistory>
+		   <totalSizeCap>20GB</totalSizeCap>
+		</rollingPolicy>
+
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
+        </layout>
+    </appender>
+
+  	<appender name="FILE-ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <OnMismatch>DENY</OnMismatch>
+            <OnMatch>ACCEPT</OnMatch>
+        </filter>
+
+        <File>D:\youdian\log2018\mip_schedule_task-err.log</File>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+		  <fileNamePattern>D:\youdian\log2018\${yyyyMM}\mip_schedule_task-err-%d{yyyy-MM-dd}.%i.txt</fileNamePattern>
+		   <maxFileSize>100MB</maxFileSize>    
+		   <maxHistory>60</maxHistory>
+		   <totalSizeCap>20GB</totalSizeCap>
+		</rollingPolicy>
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
+        </layout>
+    </appender>
+
+   <logger name="org">
+       <level value="ERROR" />
+   </logger>
+
+   <logger name="java.sql">
+       <level value="INFO" />
+   </logger>
+
+   <logger name="com.mip">
+       <level value="INFO" />
+   </logger>
+
+   <!-- 性能监控拦截日志 -->
+   <logger name="org.springframework.aop.interceptor.JamonPerformanceMonitorInterceptor">
+       <level value="TRACE" />
+   </logger>
+	<root>
+		<level value="INFO" />
+        <appender-ref ref="FILE" />
+        <appender-ref ref="FILE-ERROR" />
+	</root>
+</configuration>

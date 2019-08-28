@@ -1,0 +1,19 @@
+package com.mip.common.auth.roleJob.service.impl;
+
+import org.apache.log4j.Logger;
+
+import com.mip.common.auth.roleJob.service.RoleJobService;
+import com.mip.core.util.ServiceLocator;
+
+public class RoleJobServiceJob {
+	Logger logger=Logger.getLogger(RoleJobServiceJob.class);
+
+
+	// 执行定时任务 凌晨1点
+	public void execute() throws Exception {
+		RoleJobService service = (RoleJobService) ServiceLocator.getBean(RoleJobService.class.getName());
+		logger.info("-----------------------角色职责定时任务开始-------------------");
+		service.addWorks();
+		logger.info("-----------------------角色职责定时任务结束-------------------");
+	}
+}

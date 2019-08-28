@@ -1,0 +1,35 @@
+package com.mip.biz.oms.gwmonitor.service.impl;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.mip.biz.oms.gwmonitor.service.GwMonitorUpService;
+import com.mip.core.basebiz.service.impl.BizServiceImpl;
+
+/**
+ * @author laijh
+ * @date 2018-04-18-9:59
+ */
+public class GwMonitorUpServiceImpl extends BizServiceImpl implements GwMonitorUpService{
+
+    private static final Logger logger = LoggerFactory.getLogger(GwMonitorUpServiceImpl.class);
+    public static final String SQL_PATH = "com.mip.biz.oms.gwmonitor.";
+    @Override
+    public void updateStatus() {
+
+        try{
+            Map<String,Object> params = new HashMap();
+            params.put("1",1);
+            //更新网关的在线状态。
+            this.getDao().updateByStatement(SQL_PATH +"updateMonitorStatus",params);
+            //更新终端的在线状态。
+            this.getDao().updateByStatement(SQL_PATH + "updateSensorStatus",params);
+
+        }  catch (Exception e){
+            logger.error(e.getMessage());
+        }
+    }
+}

@@ -1,0 +1,20 @@
+package com.mip.biz.oms.kdatacalcNew.service.impl;
+
+import com.mip.biz.oms.kdatacalcNew.service.KdataCalcNewService;
+import com.mip.core.basebiz.dto.DataRecord;
+import com.mip.core.util.ServiceLocator;
+
+import java.util.List;
+
+public class Calc15MinKDataJob {
+
+	public void execute() throws Exception {
+		KdataCalcNewService kdataCalcNewService = (KdataCalcNewService) ServiceLocator
+				.getBean(KdataCalcNewService.class.getName());
+		List<DataRecord> sensorTypes = kdataCalcNewService.getCalcSensorType();
+		for(int  i=0;sensorTypes!=null&&i<sensorTypes.size();i++){
+			kdataCalcNewService.calc15MinKData(sensorTypes.get(i).getLong("ID"));
+		}
+	}
+
+}

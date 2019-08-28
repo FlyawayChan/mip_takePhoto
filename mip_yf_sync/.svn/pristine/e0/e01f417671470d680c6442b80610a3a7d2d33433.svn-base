@@ -1,0 +1,401 @@
+/**
+ * Copyright (C) 2011 Guangzhou JHComn Technologies Ltd.
+ *
+ * 本代码版权归广州佳和立创科技发展有限公司所有，且受到相关的法律保护。
+ * 没有经过版权所有者的书面同意，
+ * 任何其他个人或组织均不得以任何形式将本文件或本文件的部分代码用于其他商业用途。
+ *
+ */
+package com.mip.biz.oms.kdatacalcNew.service.impl;
+
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
+
+import com.mip.biz.oms.kdatacalcNew.service.KdataCalcNewService;
+import com.mip.core.basebiz.dto.DataRecord;
+import com.mip.core.basebiz.service.ServiceException;
+import com.mip.core.basebiz.service.impl.BizServiceImpl;
+import com.mip.core.util.ServiceLocator;
+
+
+public class KdataCalcNewServiceImpl extends BizServiceImpl implements KdataCalcNewService{
+	private static Logger logger = LoggerFactory.getLogger(KdataCalcNewServiceImpl.class);
+	private static SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+	private static SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy-MM-dd");
+
+	@Override
+	public List<DataRecord> getCalcSensorType() {
+		String sql = SQLMAP_PACKAGE+"getCalcSensorType";
+		return this.getDao().queryForDataSet(sql,null,false).getResults();
+	}
+
+	@Override
+	public void calc15MinKData(Long sensorTypeId){
+		try {
+			//时间周期为15min
+			String timeType = "15";
+			DataRecord lastCalcDr  = this.getLastCalcedMonitorTime(sensorTypeId,timeType);
+			Calendar lastMonitorTime = Calendar.getInstance();
+			if(lastCalcDr != null){
+				String lastCalcedMonitorTime = lastCalcDr.getString("MONITOR_TIME");
+				lastMonitorTime.setTime(sdf1.parse(lastCalcedMonitorTime));
+				lastMonitorTime.add(Calendar.MINUTE,15);
+			}else{
+				lastMonitorTime.add(Calendar.MINUTE,-60);//从现在之前的60分钟之前开始
+				lastMonitorTime.set(Calendar.MINUTE,0);
+			}
+			lastMonitorTime.set(Calendar.SECOND,0);
+
+			Calendar now = Calendar.getInstance();
+			while(lastMonitorTime.before(now)){
+				Calendar beginCalendar = Calendar.getInstance();
+				beginCalendar.setTime(lastMonitorTime.getTime());
+				beginCalendar.add(Calendar.MINUTE,-15);
+				beginCalendar.set(Calendar.SECOND,0);
+				calcKdata(sensorTypeId,timeType,lastMonitorTime.getTime(),beginCalendar.getTime(),lastMonitorTime.getTime(),false);
+				lastMonitorTime.add(Calendar.MINUTE,15);
+			}
+		} catch (Exception e) {
+			logger.error("KdataCalcServiceImpl.calc15MinKData()",e);
+		}
+	}
+
+
+	@Override
+	public void calc60minKdata(Long sensorTypeId) {
+		try {
+			//时间周期为60min
+			String timeType = "60";
+			DataRecord lastCalcDr  = this.getLastCalcedMonitorTime(sensorTypeId,timeType);
+			Calendar lastMonitorTime = Calendar.getInstance();
+			if(lastCalcDr != null){
+				String lastCalcedMonitorTime = lastCalcDr.getString("MONITOR_TIME");
+				lastMonitorTime.setTime(sdf1.parse(lastCalcedMonitorTime));
+			}else{
+				lastMonitorTime.add(Calendar.HOUR_OF_DAY,-3);//从现在之前的2小时之前开始
+			}
+			lastMonitorTime.add(Calendar.HOUR_OF_DAY,1);
+			lastMonitorTime.set(Calendar.MINUTE,0);
+			lastMonitorTime.set(Calendar.SECOND,0);
+
+			Calendar now = Calendar.getInstance();
+			while(lastMonitorTime.before(now)){
+				Calendar beginCalendar = Calendar.getInstance();
+				beginCalendar.setTime(lastMonitorTime.getTime());
+				beginCalendar.add(Calendar.HOUR_OF_DAY,-1);
+				beginCalendar.set(Calendar.MINUTE,0);
+				beginCalendar.set(Calendar.SECOND,0);
+
+				calcKdata(sensorTypeId,timeType,lastMonitorTime.getTime(),beginCalendar.getTime(),lastMonitorTime.getTime(),false);
+
+				lastMonitorTime.add(Calendar.HOUR_OF_DAY,1);
+			}
+		} catch (Exception e) {
+			logger.error("KdataCalcServiceImpl.calc60minKdata()",e);
+		}
+	}
+
+	@Override
+	public void calcDayKdata(Long sensorTypeId) {
+		logger.info("sensorTypeId:{}",sensorTypeId);
+		try {
+			//时间周期为一天
+			String timeType = "DAY";
+			DataRecord lastCalcDr  = this.getLastCalcedMonitorTime(sensorTypeId,timeType);
+			Calendar lastMonitorTime = Calendar.getInstance();
+			if(lastCalcDr != null){
+				String lastCalcedMonitorTime = lastCalcDr.getString("MONITOR_TIME");
+				lastMonitorTime.setTime(sdf2.parse(lastCalcedMonitorTime));
+				lastMonitorTime.add(Calendar.DAY_OF_YEAR,1);
+			}else{
+				lastMonitorTime.add(Calendar.DAY_OF_YEAR,-3);//从现在之前的2天之前开始
+			}
+			lastMonitorTime.set(Calendar.HOUR_OF_DAY,0);
+			lastMonitorTime.set(Calendar.MINUTE,0);
+			lastMonitorTime.set(Calendar.SECOND,0);
+
+			Calendar now = Calendar.getInstance();
+			while(lastMonitorTime.before(now)){
+				Calendar beginCalendar = Calendar.getInstance();
+				beginCalendar.setTime(lastMonitorTime.getTime());
+				beginCalendar.set(Calendar.HOUR_OF_DAY,0);
+				beginCalendar.set(Calendar.MINUTE,0);
+				beginCalendar.set(Calendar.SECOND,0);
+
+				Calendar endCalendar = Calendar.getInstance();
+				endCalendar.setTime(lastMonitorTime.getTime());
+				endCalendar.set(Calendar.HOUR_OF_DAY,23);
+				endCalendar.set(Calendar.MINUTE,59);
+				endCalendar.set(Calendar.SECOND,59);
+
+				calcKdata(sensorTypeId,timeType,lastMonitorTime.getTime(),beginCalendar.getTime(),endCalendar.getTime(),false);
+
+				lastMonitorTime.add(Calendar.DAY_OF_YEAR,1);
+			}
+		} catch (Exception e) {
+			logger.error("KdataCalcServiceImpl.calcDayKdata()",e);
+		}
+	}
+
+
+	private static long sevenDay = 7*24*3600*1000;
+	@Override
+	public void calcWeekKdata(Long sensorTypeId) {
+		try {
+			//时间周期为一周
+			String timeType = "WEEK";
+			DataRecord lastCalcDr  = this.getLastCalcedMonitorTime(sensorTypeId,timeType);
+			Calendar lastMonitorTime = Calendar.getInstance();
+			if(lastCalcDr != null){
+				String lastCalcedMonitorTime = lastCalcDr.getString("MONITOR_TIME");
+				lastMonitorTime.setTime(sdf2.parse(lastCalcedMonitorTime));
+				if(!"1".equals(lastCalcDr.getString("NEED_RE_CALC"))){
+					lastMonitorTime.add(Calendar.DAY_OF_YEAR,7);
+					lastMonitorTime.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+				}
+			}else{
+				lastMonitorTime.add(Calendar.DAY_OF_YEAR,-10);//从今天之前的10天开始
+				lastMonitorTime.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+			}
+			lastMonitorTime.set(Calendar.HOUR_OF_DAY,0);
+			lastMonitorTime.set(Calendar.MINUTE,0);
+			lastMonitorTime.set(Calendar.SECOND,0);
+
+			Calendar now = Calendar.getInstance();
+
+			//比现在时间大，但是只要不大于1个星期，还是可以计算
+			long timeDiff = lastMonitorTime.getTime().getTime() - now.getTime().getTime();
+			while(timeDiff<sevenDay){
+				Calendar beginCalendar = Calendar.getInstance();
+				beginCalendar.setTime(lastMonitorTime.getTime());
+				beginCalendar.add(Calendar.DAY_OF_YEAR,-6);
+				beginCalendar.set(Calendar.HOUR_OF_DAY,0);
+				beginCalendar.set(Calendar.MINUTE,0);
+				beginCalendar.set(Calendar.SECOND,0);
+
+				Calendar endCalendar = Calendar.getInstance();
+				endCalendar.setTime(lastMonitorTime.getTime());
+				endCalendar.set(Calendar.HOUR_OF_DAY,23);
+				endCalendar.set(Calendar.MINUTE,59);
+				endCalendar.set(Calendar.SECOND,59);
+
+
+				boolean needReCalc = false;
+				if(timeDiff>0) {
+					//已经计算朝前了，标记一下需要重新计算
+					needReCalc = true;
+				}
+				calcKdata(sensorTypeId,timeType,lastMonitorTime.getTime(),beginCalendar.getTime(),endCalendar.getTime(),needReCalc);
+
+				lastMonitorTime.add(Calendar.DAY_OF_YEAR,7);
+				timeDiff = lastMonitorTime.getTime().getTime() - now.getTime().getTime();
+			}
+
+		} catch (Exception e) {
+			logger.error("KdataCalcServiceImpl.calcWeekKdata()",e);
+		}
+	}
+
+	@Override
+	public void calcMonthKdata(Long sensorTypeId) {
+		try {
+			//时间周期为一个月
+			String timeType = "MONTH";
+			DataRecord lastCalcDr  = this.getLastCalcedMonitorTime(sensorTypeId,timeType);
+			Calendar lastMonitorTime = Calendar.getInstance();
+			if(lastCalcDr != null){
+				String lastCalcedMonitorTime = lastCalcDr.getString("MONITOR_TIME");
+				lastMonitorTime.setTime(sdf2.parse(lastCalcedMonitorTime));
+			}else{
+				lastMonitorTime.add(Calendar.MONTH,-2);//从今天之前的2个月开始
+			}
+			lastMonitorTime.add(Calendar.MONTH,1);
+			lastMonitorTime.set(Calendar.DATE, 1);
+			lastMonitorTime.set(Calendar.HOUR,0);
+			lastMonitorTime.set(Calendar.MINUTE,0);
+			lastMonitorTime.set(Calendar.SECOND,0);
+
+			Calendar now = Calendar.getInstance();
+			while(lastMonitorTime.before(now)){
+				Calendar beginCalendar = Calendar.getInstance();
+				beginCalendar.setTime(lastMonitorTime.getTime());
+				beginCalendar.add(Calendar.MONTH,-1);
+				beginCalendar.set(Calendar.DATE, 1);
+				beginCalendar.set(Calendar.HOUR,0);
+				beginCalendar.set(Calendar.MINUTE,0);
+				beginCalendar.set(Calendar.SECOND,0);
+
+				calcKdata(sensorTypeId,timeType,lastMonitorTime.getTime(),beginCalendar.getTime(),lastMonitorTime.getTime(),false);
+
+				lastMonitorTime.add(Calendar.MONTH,1);
+			}
+		} catch (Exception e) {
+			logger.error("KdataCalcServiceImpl.calcMonthKdata()",e);
+		}
+	}
+
+
+
+
+	private void calcKdata(Long sensorTypeId,String timeType,Date monitorTime,Date beginTime,Date endTime,boolean needReCalc) throws ServiceException {
+		DataSourceTransactionManager transactionManager = (DataSourceTransactionManager) ServiceLocator.getBean("transactionManager");
+		DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+		def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+		TransactionStatus status = transactionManager.getTransaction(def);
+		try {
+			calcKdataImpl(sensorTypeId,timeType,monitorTime,beginTime,endTime,needReCalc);
+			transactionManager.commit(status);
+		} catch (Exception e) {
+			transactionManager.rollback(status);
+			throw e;
+		}
+	}
+
+	private void calcKdataImpl(Long sensorTypeId,String timeType,Date monitorTime,Date beginTime,Date endTime,boolean needReCalc) throws ServiceException{
+		logger.info("calcKdataImpl:sensorTypeId:{},timeType:{},monitorTime:{},beginTime:{},endTime:{},needReCalc:{}",sensorTypeId,timeType,monitorTime,beginTime,endTime,needReCalc);
+
+		Date logBeginDate = new Date();
+		Map<String, Object> param = new HashMap<String, Object>();
+		param.put("sensor_type_id",sensorTypeId);
+		DataRecord metaData = this.getDao().queryForDataRecord(SQLMAP_PACKAGE+"getMetaData",param,false);
+		logger.info("metaData:{}",metaData);
+		if(metaData == null || metaData.isEmpty()){
+			return;
+		}
+		String oriTableName = metaData.getString("ORI_DATA_TABLE");
+		String columns = metaData.getString("COLUMNS");
+		param.clear();
+		param.put("ORI_TABLE_NAME", oriTableName);
+		param.put("COLUMNS", columns);
+		param.put("MONITOR_BEGIN_TIME", beginTime);
+		param.put("MONITOR_END_TIME", endTime);
+		List<DataRecord> kDatas = this.getDao().queryForDataSet(SQLMAP_PACKAGE+"calcKdata",param,false).getResults();
+		String kdataTableName = oriTableName+"_"+timeType;
+		String timeRage = null;
+		if("WEEK".equals(timeType)) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(monitorTime);
+            SimpleDateFormat sdf = new SimpleDateFormat("MM月dd日HH时mm分");
+            timeRage = calendar.get(Calendar.YEAR)+"年第"+calendar.get(Calendar.WEEK_OF_YEAR)+"周，"+
+            sdf.format(beginTime)+"-"+sdf.format(endTime);
+		}else if("DAY".equals(timeType)) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(monitorTime);
+            SimpleDateFormat sdf = new SimpleDateFormat("dd日HH时mm分");
+            timeRage = sdf.format(beginTime)+"-"+sdf.format(endTime);
+		}else if("60".equals(timeType)) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(monitorTime);
+            SimpleDateFormat sdf = new SimpleDateFormat("HH时mm分ss秒");
+            timeRage = sdf.format(beginTime)+"-"+sdf.format(endTime);
+		}else if("15".equals(timeType)) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(monitorTime);
+            SimpleDateFormat sdf = new SimpleDateFormat("HH时mm分ss秒");
+            timeRage = sdf.format(beginTime)+"-"+sdf.format(endTime);
+		}
+		for(int i=0;kDatas!=null&&i<kDatas.size();i++){
+			DataRecord kData = kDatas.get(i);
+			//kData.put("TIME_RANGE",timeRage);
+
+			Long oldKdataId = this.getKDataId(kdataTableName,kData.getLong("MONITOR_NODE_ID"),monitorTime);
+			logger.info("oldKdataId:{}",oldKdataId);
+			if(oldKdataId != null){
+				param.clear();
+				param.put("ID",oldKdataId);
+				this.getDao().update(kdataTableName,kData,param);
+			}else{
+				kData.put("MONITOR_TIME",monitorTime);
+				kData.put("CREATE_TIME",new Date());
+				kData.put("ID",this.generateLongId(null));
+				this.getDao().insert(kdataTableName,kData);
+			}
+		}
+		Date logEndDate = new Date();
+		saveKDataLog(sensorTypeId,timeType,monitorTime,logBeginDate,logEndDate,needReCalc);
+	}
+
+
+	private void saveKDataLog(Long sensorTypeId,String timeType,Date monitorTime,Date logBeginDate,Date logEndDate,boolean needReCalc){
+		String monitorTimeStr = null;
+		if(timeType.equals("15") || timeType.equals("60")) {
+			monitorTimeStr = sdf1.format(monitorTime);
+		}else if(timeType.equals("DAY") || timeType.equals("MONTH")|| timeType.equals("WEEK")) {
+			monitorTimeStr = sdf2.format(monitorTime);
+		}
+		Long logId = this.getKDataLogId(sensorTypeId,timeType,monitorTimeStr);
+		if(logId != null){
+			DataRecord kdataLog = new DataRecord();
+			if(needReCalc) {
+				kdataLog.put("NEED_RE_CALC","1");
+			}else {
+				kdataLog.put("NEED_RE_CALC","0");
+			}
+			kdataLog.put("MONITOR_TIME",monitorTimeStr);
+			kdataLog.put("BEGIN_TIME",logBeginDate);
+			kdataLog.put("END_TIME",logEndDate);
+			kdataLog.put("TIME_TYPE", timeType);
+			kdataLog.put("MONITOR_SENSOR_TYPE_ID", sensorTypeId);
+			Map param = new HashMap();
+			param.put("ID",logId);
+			this.getDao().update("OMS_NEWKDATA_LOG",kdataLog,param);
+		}else{
+			DataRecord kdataLog = new DataRecord();
+			kdataLog.put("ID",this.getDao().generateId());
+			if(needReCalc) {
+				kdataLog.put("NEED_RE_CALC","1");
+			}else {
+				kdataLog.put("NEED_RE_CALC","0");
+			}
+			kdataLog.put("MONITOR_TIME",monitorTimeStr);
+			kdataLog.put("BEGIN_TIME",logBeginDate);
+			kdataLog.put("END_TIME",logEndDate);
+			kdataLog.put("TIME_TYPE", timeType);
+			kdataLog.put("MONITOR_SENSOR_TYPE_ID", sensorTypeId);
+			this.getDao().insert("OMS_NEWKDATA_LOG",kdataLog);
+		}
+	}
+
+	private Long getKDataLogId(Long sensorTypeId,String timeType,String monitorTimeStr){
+		Map<String, Object> param = new HashMap<String, Object>();
+		param.put("sensorTypeId", sensorTypeId);
+		param.put("timeType", timeType);
+		param.put("monitorTime", monitorTimeStr);
+		List<DataRecord> result = this.getDao().queryForDataSet(SQLMAP_PACKAGE+"getKDataLogId", param,false).getResults();
+		if(result!=null && result.size()>0){
+			return result.get(0).getLong("ID");
+		}
+		return null;
+	}
+
+	private Long getKDataId(String tableName,Long monitorNodeId, Date monitorTime){
+		Map<String, Object> param = new HashMap<String, Object>();
+		param.put("KDATA_TABLE_NAME", tableName);
+		param.put("MONITOR_NODE_ID", monitorNodeId);
+		param.put("MONITOR_TIME", monitorTime);
+		List<DataRecord> result = this.getDao().queryForDataSet(SQLMAP_PACKAGE+"getKDataId", param,false).getResults();
+		if(result!=null && result.size()>0){
+			return result.get(0).getLong("ID");
+		}
+		return null;
+	}
+
+	private DataRecord getLastCalcedMonitorTime(Long sensorTypeId, String timeType){
+		Map<String, Object> param = new HashMap<String, Object>();
+		param.put("TIME_TYPE", timeType);
+		param.put("sensorTypeId", sensorTypeId);
+		return this.getDao().queryForDataRecord(SQLMAP_PACKAGE+"getLastCalcedMonitorTime", param,false);
+	}
+}

@@ -1,0 +1,17 @@
+package com.mip.biz.oms.dmpManage.dmpQuartz.service.impl;
+
+import com.mip.biz.oms.dmpManage.dmpQuartz.service.DmpQuartzService;
+import com.mip.core.util.ServiceLocator;
+
+/**
+ * @author licl
+ * @date 2016年4月25日 下午4:55:42
+ */
+public class DmpQuartzServiceJob {
+
+	public void execute() throws Exception {
+		DmpQuartzService service = (DmpQuartzService) ServiceLocator
+				.getBean(DmpQuartzService.class.getName());
+		service.calcHourELData();
+	}
+}

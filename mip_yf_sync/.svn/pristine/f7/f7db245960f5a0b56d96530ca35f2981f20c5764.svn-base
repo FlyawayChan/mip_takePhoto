@@ -1,0 +1,15 @@
+package com.mip.biz.oms.gwmonitor.service;
+
+import com.mip.core.basebiz.dto.DataRecord;
+import com.mip.core.basebiz.service.BizService;
+
+/**
+ * @author laijh
+ * @date 2018-04-18-9:58
+ * 更新硬件装置和硬件终端的状态。
+ */
+public interface GwMonitorUpService extends BizService<DataRecord> {
+
+    public void updateStatus();
+
+}

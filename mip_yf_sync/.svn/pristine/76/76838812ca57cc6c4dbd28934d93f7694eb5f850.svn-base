@@ -1,0 +1,6 @@
+#db.properties
+db.driver=oracle.jdbc.driver.OracleDriver
+db.url=jdbc\:oracle\:thin\:@localhost\:1521\:ORCL
+db.username=YD_OMS
+db.password=jhcomn
+db.dbName=YD_OMS

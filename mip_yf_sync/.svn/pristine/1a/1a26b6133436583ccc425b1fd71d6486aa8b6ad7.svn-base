@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+    "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="com.mip.biz.oms.kdatacalcNew">
+	<select id="getMetaData" parameterType="map" resultType="datarecord">
+		select a.ori_data_table,
+			listagg(b.calc_type ||'('||aimcode||') '||aimcode,',') WITHIN GROUP (ORDER BY b.calc_type ||'('||aimcode||') '||aimcode) COLUMNS from OMS_MONITOR_SENSOR_TYPE a
+		inner join OMS_MONITOR_AIM b on a.id = B.SENSOR_TYPE_ID
+		where a.id = #{sensor_type_id} and b.calc_type is not null
+		group by a.ori_data_table
+	</select>
+	<select id="calcKdata" parameterType="map" resultType="datarecord">
+ 		SELECT DISTINCT * FROM
+ 		(
+	 		select CLIENT_ID,MONITOR_NODE_ID,${COLUMNS}
+	 		from ${ORI_TABLE_NAME}
+	 		where 1 = 1
+			and monitor_time &gt;= #{MONITOR_BEGIN_TIME}
+			and monitor_time &lt;= #{MONITOR_END_TIME}
+			GROUP BY CLIENT_ID,MONITOR_NODE_ID
+		)
+	</select>
+	<select id="getKDataId" parameterType="map" resultType="datarecord">
+		select ID
+ 		from ${KDATA_TABLE_NAME}
+ 		where 1 = 1
+		and MONITOR_NODE_ID = #{MONITOR_NODE_ID}
+		and MONITOR_TIME = #{MONITOR_TIME}
+	</select>
+	<select id="getKDataLogId" parameterType="map" resultType="datarecord">
+		select * from OMS_NEWKDATA_LOG
+		where monitor_sensor_type_id = #{sensorTypeId}
+		and time_type = #{timeType}
+		and monitor_time = #{monitorTime}
+	</select>
+	<select id="getLastCalcedMonitorTime" parameterType="map" resultType="datarecord">
+        select AA.* from (
+         	select a.*
+ 			from OMS_NEWKDATA_LOG a
+ 			where TIME_TYPE=#{TIME_TYPE} and MONITOR_SENSOR_TYPE_ID=#{sensorTypeId}
+         	order by MONITOR_TIME desc
+        )  AA WHERE ROWNUM = 1
+	</select>
+	<select id="getCalcSensorType" parameterType="map" resultType="datarecord">
+		select * from OMS_MONITOR_SENSOR_TYPE
+		where id in(
+			SELECT sensor_type_id
+			FROM YD_OMS.OMS_MONITOR_AIM
+			Where
+			calc_flag = '是' and calc_type is not null
+		)
+	</select>
+</mapper>
+
+

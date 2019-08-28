@@ -1,0 +1,53 @@
+/**
+ * Copyright (C) 2011 Guangzhou JHComn Technologies Ltd.
+ *
+ * 本代码版权归广州佳和立创科技发展有限公司所有，且受到相关的法律保护。
+ * 没有经过版权所有者的书面同意，
+ * 任何其他个人或组织均不得以任何形式将本文件或本文件的部分代码用于其他商业用途。
+ *
+ */
+package com.mip.biz.oms.kdatacalcNew.service;
+
+import com.mip.core.basebiz.dto.DataRecord;
+import com.mip.core.basebiz.service.BizService;
+
+import java.util.List;
+
+
+public interface KdataCalcNewService extends BizService<DataRecord>{
+	public static String SQLMAP_PACKAGE = "com.mip.biz.oms.kdatacalcNew.";
+	/**
+	 * 保存15分钟一次的数据
+	 */
+	public void calc15MinKData(Long sensorTypeId);
+
+	/**
+	 * 保存60分钟一次的数据
+	 */
+	public void calc60minKdata(Long sensorTypeId);
+
+
+	/**
+	 * 保存一天一次的数据
+	 */
+	public void calcDayKdata(Long sensorTypeId);
+
+
+	/**
+	 * 保存一周一次的数据
+	 */
+	public void calcWeekKdata(Long sensorTypeId);
+
+
+	/**
+	 * 保存一月一次的数据
+	 */
+	public void calcMonthKdata(Long sensorTypeId);
+
+
+
+	/**
+	 * 获取需要用这种方式计算K线的监测类型
+	 */
+	public List<DataRecord> getCalcSensorType();
+}

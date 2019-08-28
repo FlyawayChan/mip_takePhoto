@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+						http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"
+	default-lazy-init="true"
+	>
+
+	<!-- 定时器名字 -->
+	<bean id="schedulerFactory" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">
+			<list>
+
+				<!--角色职责关联 -->
+				<ref bean="roleJobTrigger"/>
+
+				<!--新的计算K线数据的程序（单独存放） -->
+				<ref bean="NewCalc15MinKDataTrigger"/>
+				<ref bean="NewCalc60MinKDataTrigger"/>
+				<ref bean="NewCalcDayKDataTrigger"/>
+				<ref bean="NewCalcWeekKDataTrigger"/>
+				<ref bean="NewCalcMonthKDataTrigger"/>
+
+				<!--以下为在线监测所需要定时器，请在正式环境开启 -->
+
+				<!--电能质量周期统计（天、月） -->
+                <!--<ref bean="CalcDayPqmDataTrigger" />-->
+                <!--<ref bean="CalcMonthPqmDataTrigger" />-->
+
+                <!-- 电网参数监测统计（时、日、月、年） -->
+                <!--<ref bean="CalcHourDmpDataTrigger" />-->
+                <!--<ref bean="CalcDayDmpDataTrigger" />-->
+                <!--<ref bean="CalcMonthDmpDataTrigger" />-->
+                <!--<ref bean="CalcYearDmpDataTrigger" />-->
+
+				<!--定时更新硬件装置和硬件终端的状态-->
+				<ref bean="updateStatusTrigger" />
+			</list>
+		</property>
+	</bean>
+
+
+
+	<!-- 角色职责 -->
+	<bean id="roleJob"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<bean class="com.mip.common.auth.roleJob.service.impl.RoleJobServiceJob"></bean>
+		</property>
+		<property name="targetMethod" value="execute"></property>
+	</bean>
+	<bean id="roleJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="roleJob"></property>
+		<property name="cronExpression" value="0 0 1 * * ?"></property>
+	</bean>
+
+	<!-- 计算15分钟KData -->
+	<bean id="NewCalc15MinKData"
+		  class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<bean class="com.mip.biz.oms.kdatacalcNew.service.impl.Calc15MinKDataJob"></bean>
+		</property>
+		<property name="targetMethod" value="execute"></property>
+	</bean>
+	<bean id="NewCalc15MinKDataTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="NewCalc15MinKData"></property>
+		<property name="cronExpression" value="55 */15 * * *  ?"></property><!-- 每15钟的55秒执行 -->
+	</bean>
+	<!-- 计算60分钟KData -->
+	<bean id="NewCalc60MinKData"
+		  class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<bean class="com.mip.biz.oms.kdatacalcNew.service.impl.Calc60MinKDataJob"></bean>
+		</property>
+		<property name="targetMethod" value="execute"></property>
+	</bean>
+	<bean id="NewCalc60MinKDataTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="NewCalc60MinKData"></property>
+		<property name="cronExpression" value="0 5 * * * ?"></property><!-- 每小时的0:55秒时执行 -->
+	</bean>
+	<!-- 计算一天KData -->
+	<!--<bean id="NewCalcDayKData"-->
+		  <!--class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">-->
+		<!--<property name="targetObject">-->
+			<!--<bean class="com.mip.biz.oms.kdatacalcNew.service.impl.CalcDayKDataJob"></bean>-->
+		<!--</property>-->
+		<!--<property name="targetMethod" value="execute"></property>-->
+	<!--</bean>-->
+	<!--<bean id="NewCalcDayKDataTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">-->
+		<!--<property name="jobDetail" ref="NewCalcDayKData"></property>-->
+		<!--<property name="cronExpression" value="0 0 3 * * ?"></property>&lt;!&ndash; 每天3点执行 &ndash;&gt;-->
+	<!--</bean>-->
+
+	<bean id="NewCalcDayKData"
+		  class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<bean class="com.mip.biz.oms.yf_sync.service.impl.yfSyncDayDataJob"></bean>
+		</property>
+		<property name="targetMethod" value="execute"></property>
+	</bean>
+	<bean id="NewCalcDayKDataTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="NewCalcDayKData"></property>
+		<property name="cronExpression" value="55 */1 * * *  ?"></property><!-- 云浮同步数据测试时使用 -->
+	</bean>
+
+	<!-- 计算周KData -->
+	<bean id="NewCalcWeekKData"
+		  class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<bean class="com.mip.biz.oms.kdatacalcNew.service.impl.CalcWeekKDataJob"></bean>
+		</property>
+		<property name="targetMethod" value="execute"></property>
+	</bean>
+	<bean id="NewCalcWeekKDataTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="NewCalcWeekKData"></property>
+		<property name="cronExpression" value="0 0 4 * * ?"></property><!-- 每天4点执行 -->
+	</bean>
+	<!-- 计算月KData -->
+	<bean id="NewCalcMonthKData"
+		  class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<bean class="com.mip.biz.oms.kdatacalcNew.service.impl.CalcMonthKDataJob"></bean>
+		</property>
+		<property name="targetMethod" value="execute"></property>
+	</bean>
+	<bean id="NewCalcMonthKDataTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="NewCalcMonthKData"></property>
+		<property name="cronExpression" value="0 15 0 1 * ? *"></property><!-- 每天10点15分执行一次 -->
+	</bean>
+
+
+	<!-- 电能质量周期统计（天） -->
+	<bean id="CalcDayPqmData"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<bean class="com.mip.biz.oms.pqmManage.pqmQuartz.service.impl.CalcDayPqmDataJob"></bean>
+		</property>
+		<property name="targetMethod" value="execute"></property>
+	</bean>
+	<bean id="CalcDayPqmDataTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="CalcDayPqmData"></property>
+		<property name="cronExpression" value="0 20 0 * * ?"></property><!-- 每天的00:20时执行 -->
+	</bean>
+	<!-- 电能质量周期统计（月） -->
+	<bean id="CalcMonthPqmData"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<bean class="com.mip.biz.oms.pqmManage.pqmQuartz.service.impl.CalcMonthPqmDataJob"></bean>
+		</property>
+		<property name="targetMethod" value="execute"></property>
+	</bean>
+	<bean id="CalcMonthPqmDataTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="CalcMonthPqmData"></property>
+		<property name="cronExpression" value="0 20 0 1 * ?"></property><!-- 每月1号00:20时执行 -->
+	</bean>
+
+	<!-- 电网参数周期统计 -->
+	<bean id="CalcHourDmpData" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="com.mip.biz.oms.dmpManage.dmpQuartz.service.DmpQuartzService"></property>
+		<property name="targetMethod" value="calcHourELData"></property>
+	</bean>
+	<bean id="CalcHourDmpDataTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="CalcHourDmpData"></property>
+		<property name="cronExpression" value="0 10 * * * ?"></property><!-- 每小时的10分执行 -->
+	</bean>
+
+	<bean id="CalcDayDmpData"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="com.mip.biz.oms.dmpManage.dmpQuartz.service.DmpQuartzService"></property>
+		<property name="targetMethod" value="calcDayELData"></property>
+	</bean>
+	<bean id="CalcDayDmpDataTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="CalcDayDmpData"></property>
+		<property name="cronExpression" value="0 0 1 * * ?"></property><!-- 每天的01:00时执行 -->
+	</bean>
+
+	<bean id="CalcMonthDmpData"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="com.mip.biz.oms.dmpManage.dmpQuartz.service.DmpQuartzService"></property>
+		<property name="targetMethod" value="calcMonthELData"></property>
+	</bean>
+	<bean id="CalcMonthDmpDataTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="CalcMonthDmpData"></property>
+		<property name="cronExpression" value="0 0 5 1 * ?"></property><!-- 每月的1日05:00时执行 -->
+	</bean>
+
+	<bean id="CalcYearDmpData"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="com.mip.biz.oms.dmpManage.dmpQuartz.service.DmpQuartzService"></property>
+		<property name="targetMethod" value="calcYearELData"></property>
+	</bean>
+	<bean id="CalcYearDmpDataTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="CalcYearDmpData"></property>
+		<property name="cronExpression" value="0 0 5 1 1 ?"></property><!-- 每年的1月1日05:00时执行 -->
+	</bean>
+
+	<!--定时更新硬件装置和硬件终端的状态-->
+	<bean id="updateStatusJob"
+		  class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<bean class="com.mip.biz.oms.gwmonitor.service.impl.GwMonitorJob"></bean>
+		</property>
+		<property name="targetMethod" value="execute"></property>
+	</bean>
+	<bean id="updateStatusTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="updateStatusJob"></property>
+		<property name="cronExpression" value="0 0/5 * * * ?"></property><!-- 每5分钟执行 -->
+	</bean>
+</beans>

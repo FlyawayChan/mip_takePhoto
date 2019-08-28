@@ -1,0 +1,891 @@
+/**
+ * Copyright (C) 2011 Guangzhou JHComn Technologies Ltd.
+ *
+ * 本代码版权归广州佳和立创科技发展有限公司所有，且受到相关的法律保护。
+ * 没有经过版权所有者的书面同意，
+ * 任何其他个人或组织均不得以任何形式将本文件或本文件的部分代码用于其他商业用途。
+ *
+ */
+package com.mip.biz.oms.dmpManage.dmpQuartz.util;
+
+import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
+/**
+ * @author zhouxiaoyun
+ * @date 2013-3-5 下午03:46:30
+ * @function 关于时间处理的一些工具方法
+ */
+public class TimeUtil {
+	/**
+	 * 时间转换成字符串
+	 * @param Date 时间 如new Date()
+	 * @return String 如2012-05-02 09:43:17
+	 * **/
+	public static String dateToString(Date date){
+		SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String str=sdf.format(date);
+		return str;
+	}
+	/**
+	 * 时间转换成字符串
+	 * @param Date 时间 如new Date()
+	 * @param ways 转化成字符串的样式 如yyyy-MM-dd
+	 * @return String 如2012-05-02
+	 * **/
+	public static String dateToString(Date date,String ways){
+		SimpleDateFormat sdf=new SimpleDateFormat(ways);
+		String str=sdf.format(date);
+		return str;
+	}
+	/**
+	 * 字符串转换成时间
+	 * @param str 一个字符串，用于转化成时间  如如2012-05-02 09:24:00
+	 * @return  Date Mon Jan 02 09:24:00 CST 2012
+	 * **/
+	public  static Date stringToDate(String str){
+		if(str==null){
+			return new Date();
+		}
+		if(str.length()<14){
+			str=str+" 00:00:00";
+		}
+		SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		Date date=null;
+		try {
+			date=sdf.parse(str);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		return date;
+	}
+
+	/**
+	 * 字符串转换成时间
+	 * @param str 一个字符串，用于转化成时间  如如2012-05-02 09:24:00
+	 * @return  Date Mon Jan 02 09:24:00 CST 2012
+	 * **/
+	public  static Date stringToDate2(String str, String way){
+		SimpleDateFormat sdf=new SimpleDateFormat(way);
+		Date date=null;
+		try {
+			date=sdf.parse(str);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		return date;
+	}
+	/**
+	 * 字符串转换成时间
+	 * @param str 一个字符串，用于转化成时间  如如2012-05-02 09:24:00
+	 * @return  Date Mon Jan 02 09:24:00 CST 2012
+	 * **/
+	public  static Date stringToDate3(String str, String way){
+		SimpleDateFormat sdf=new SimpleDateFormat(way);
+		Date date=null;
+		try {
+			if(str.trim().length()==8){
+				date=sdf.parse(str);
+			}
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		return date;
+	}
+
+	/**
+	 * 根据传进来的时间字符串返回其毫秒数
+	 * **/
+	public static long stringToTime(String str){
+		if(null==str || "".equals(str)){
+			return 0;
+		}
+		return stringToDate(str).getTime();
+	}
+	public static Timestamp StringToTimeStamp(String str){
+		if(null==str || "".equals(str)){
+			return null;
+		}
+		Timestamp ts = new Timestamp(System.currentTimeMillis());
+		try {
+			ts = Timestamp.valueOf(str);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return ts;
+	}
+	/**
+	 * 当前时间的前多少毫秒
+	 * 负数为前。正式推后
+	 * **/
+	public static String StringToTimeStampBefore(String str,long ms){
+		if(null==str || "".equals(str)){
+			return null;
+		}
+		String  back=null;
+		Timestamp ts = new Timestamp(System.currentTimeMillis());
+		try {
+			ts = Timestamp.valueOf(str);
+			long time=ts.getTime()+ms;
+			ts.setTime(time);
+			back=DateUtil.timestamp2Str(ts);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return back;
+	}
+
+	/**
+	 * 字符串转换成时间
+	 * @param str 一个字符串 如2012-05-02 09:24:00
+	 * @param ways:转化的形式，如yyyy-MM-dd
+	 * @return  Date Wed May 02 00:00:00 CST 2012
+	 * **/
+	public  static Date stringToDate(String str,String ways){
+		SimpleDateFormat sdf=new SimpleDateFormat(ways);
+		Date date=null;
+		try {
+			date=sdf.parse(str);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		return date;
+	}
+	/**
+	 * 获取一天的时间2012-05-02 00:00:00---2012-05-02 23:59:59
+	 * @param date 时间
+	 * @return String[2] 返回一个数组
+	 * */
+	public static String[] getAllDay(Date date){
+		String[] str=new String[2];
+		String s=dateToString(date,"yyyy-MM-dd");
+		str[0]=s+" 00:00:00";
+		str[1]=s+" 23:59:59";
+		return str;
+	}
+	/**
+	 * 获取当前时间的月，年，星期，季度
+	 * @return 返回一个个数为4的数组：
+	 * num[0]是年数
+	 * num[1]是季度数
+	 * num[2]是月数
+	 * num[3]是星期数
+	 *
+	 * */
+	public static  int[] getBeforeDateByNow(){
+		int [] num=new int[4];
+		int month=0;
+		Calendar cal=Calendar.getInstance();
+		//上一年
+		num[0]=cal.get(Calendar.YEAR);
+		month= cal.get(Calendar.MONTH);
+		//获取上一个季度
+		num[1]=month/3+1;
+		/*switch(month/3){
+		case 0:
+			num[1]=1;break;
+		case 1:
+			num[1]=2;break;
+		case 2:
+			num[1]=3;break;
+		case 3:
+			num[1]=4;break;
+		}*/
+		num[2] =  cal.get(Calendar.MONTH)+1;
+		num[3]=cal.get(Calendar.WEEK_OF_YEAR);
+		//System.out.println("当前时间是："+cal);
+		System.out.println("当前时间的年是："+num[0]+"-季度是:"+num[1]+"-月份数是："+num[2]+"-星期"+num[3]);
+		return num;
+	}
+	/**
+	 * 获取当前月份获取季度数
+	 * @return 返回季度数：
+	 * @param int 月份
+	 *
+	 * */
+	public static  int getquarterlyByMonth(int month){
+		int quarterly=0;
+		if(month%3==0){
+			quarterly=month/3;
+		}else{
+			quarterly=month/3+1;
+		}
+		System.out.println("当前时间的季度是："+quarterly);
+		return quarterly;
+	}
+	/**
+	 * 根据当前季度数获取上一个季度的时间
+	 * @return 返回时间字符串数组：
+	 * @param int 季度
+	 *  @prama int year
+	 *
+	 * */
+	public static  String[] getQuarterlyDateByQuarterly(int year,int quarterly){
+		System.out.println("当前时间的季度是："+quarterly);
+		String[] str=new String[2];
+		switch(quarterly){
+		case 1:
+			str[0]=(year-1)+"-10-01";
+			str[1]=(year-1)+"-12-31";
+			break;
+		case 2:
+			str[0]=year+"-01-01";
+			str[1]=year+"-03-31";
+			break;
+		case 3:
+			str[0]=year+"-04-01";
+			str[1]=year+"-06-30";
+			break;
+		default :
+			str[0]=year+"-07-01";
+		str[1]=year+"-09-30";
+		break;
+		}
+		System.out.println("time is quarter ==="+str[0]+"---"+str[1]);
+		return str;
+	}
+
+	/**
+	 * 根据当前季度数获取上一个季度的时间
+	 * @return 返回时间字符串数组：
+	 * @param int 季度
+	 *  @prama int year
+	 *
+	 * */
+	public static  String[] getCurrutQuarterlyDateByQuarterly(int year,int quarterly){
+		System.out.println("当前时间的季度是："+quarterly);
+		String[] str=new String[2];
+		switch(quarterly){
+		case 1:
+			str[0]=year+"-01-01";
+			str[1]=year+"-03-31";
+			break;
+		case 2:
+			str[0]=year+"-04-01";
+			str[1]=year+"-06-30";
+			break;
+		case 3:
+			str[0]=year+"-07-01";
+			str[1]=year+"-09-30";
+			break;
+		default :
+			str[0]=year+"--01";
+		str[1]=year+"-12-31";
+		break;
+		}
+		System.out.println("time is quarter ==="+str[0]+"---"+str[1]);
+		return str;
+	}
+	/**
+	 * 根据当前月份数获取上一个月份的时间
+	 * @return 返回时间字符串数组：
+	 * @param int month，
+	 * @prama int year
+	 * */
+	public static  String[] getMonthDateByMonth(int month,int year){
+		Calendar   cal   =   Calendar.getInstance();
+		//获取上一个月的天数 6
+		cal.set(Calendar.YEAR,year);
+		cal.set(Calendar.MONTH,month-2);//7月
+		int   maxDate   =   cal.getActualMaximum(Calendar.DATE);
+		System.out.println("当前时间的月份是："+month);
+		String[] str=new String[2];
+		switch(month){
+		case 1:
+			str[0]=(year-1)+"-12-01";
+			str[1]=(year-1)+"-12-31";
+			break;
+		default :
+			str[0]=year+"-"+(month-1)+"-01";
+		str[1]=year+"-"+(month-1)+"-"+maxDate;
+		break;
+		}
+		System.out.println("月份是："+str[0]+"---"+str[1]);
+		return str;
+	}
+	/**
+	 * 根据当前月份数获取上一个月份的时间
+	 * @return 返回时间字符串数组：yyyy-MM-dd hh24:mi:ss
+	 * @param int month，
+	 * @prama int year
+	 * */
+	public static  String[] getBeforeMonthDateByMonth(int month,int year){
+		Calendar   cal   =   Calendar.getInstance();
+		//获取上一个月的天数 6
+		cal.set(Calendar.YEAR,year);
+		cal.set(Calendar.MONTH,month-2);//7月
+		int   maxDate   =   cal.getActualMaximum(Calendar.DATE);
+		String[] str=new String[2];
+		switch(month){
+		case 1:
+			str[0]=(year-1)+"-12-01 00:00:00";
+			str[1]=(year-1)+"-12-31 23:59:59";
+			break;
+		default :
+			str[0]=year+"-"+(month-1)+"-01 00:00:00";
+		str[1]=year+"-"+(month-1)+"-"+maxDate+" 23:59:59";
+		break;
+		}
+		System.out.println("上月时间段是："+str[0]+"---"+str[1]);
+		return str;
+	}
+	public static  String[] getMonthDateByMonth25(int month,int year){
+		Calendar   cal   =   Calendar.getInstance();
+		//获取上一个月的天数 6
+		cal.set(Calendar.YEAR,year);
+		cal.set(Calendar.MONTH,month-2);//7月
+		int   maxDate   =   cal.getActualMaximum(Calendar.DATE);
+		System.out.println("当前时间的月份是："+month);
+		String[] str=new String[2];
+		switch(month){
+		case 1:
+			str[0]=(year-1)+"-12-25";
+			str[1]=(year)+"-1-24";
+			break;
+		default :
+			str[0]=year+"-"+(month-1)+"-25";
+		str[1]=year+"-"+(month)+"-"+24;
+		break;
+		}
+		System.out.println("月份是："+str[0]+"---"+str[1]);
+		return str;
+	}
+
+	public static  String[] getMonthDateByMonth(int year,int month,String startDay,String endDay){
+		Calendar   cal   =   Calendar.getInstance();
+		//获取上一个月的天数 6
+		cal.set(Calendar.YEAR,year);
+		cal.set(Calendar.MONTH,month-2);//7月
+		int   maxDate   =   cal.getActualMaximum(Calendar.DATE);
+		System.out.println("当前时间的月份是："+month);
+		String[] str=new String[2];
+		switch(month){
+		case 1:
+			str[0]=(year-1)+"-12-"+startDay;
+			str[1]=(year)+"-1-"+endDay;
+			break;
+		default :
+			str[0]=year+"-"+(month-1)+"-"+startDay;
+		str[1]=year+"-"+(month)+"-"+endDay;
+		break;
+		}
+		System.out.println("月份是："+str[0]+"---"+str[1]);
+		return str;
+	}
+	/**
+	 * 根据当前星期数获取上一个星期的时间
+	 * 默认周日是第一天
+	 * @return 返回时间字符串数组：
+	 * */
+	public static  String[] getWeekDateByWeek(){
+		Calendar   cal   =   Calendar.getInstance();
+		String str[]=new String[2];
+		int num=cal.get(Calendar.DAY_OF_WEEK);
+		cal.add(Calendar.DATE, -num);
+		str[1]=cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH)+1) + "-" + cal.get(Calendar.DATE);
+		cal.add(Calendar.DATE, -6);
+		str[0]= cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH)+1) + "-" + cal.get(Calendar.DATE);
+		System.out.println("time is="+str[0]+"--"+str[1]);
+		return str;
+	}
+	/**
+	 * 根据当前星期数获取当前星期的时间
+	 * 默认周日是第一天
+	 * @return 返回时间字符串数组：
+	 * */
+	public static  String[] getWeekDateByWeek(int year,int week){
+		Calendar   cal   =   Calendar.getInstance();
+		cal.set(year, 0, 1);
+		String str[]=new String[2];
+		int num=cal.get(Calendar.DAY_OF_WEEK);
+		cal.add(Calendar.DATE, (num+(week)*7)+1);
+		str[1]=cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH)+1) + "-" + cal.get(Calendar.DATE);
+		cal.add(Calendar.DATE, -6);
+		str[0]= cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH)+1) + "-" + cal.get(Calendar.DATE);
+		System.out.println("time is="+str[0]+"--"+str[1]);
+		return str;
+	}
+	public static  String[] getWeekDateByWeek(Calendar cal){
+		//Calendar   cal   =   Calendar.getInstance();
+		String str[]=new String[2];
+		int num=cal.get(Calendar.DAY_OF_WEEK);
+		cal.add(Calendar.DATE, -num);
+		str[1]=cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH)+1) + "-" + cal.get(Calendar.DATE);
+		cal.add(Calendar.DATE, -6);
+		str[0]= cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH)+1) + "-" + cal.get(Calendar.DATE);
+		System.out.println("time is="+str[0]+"--"+str[1]);
+		return str;
+	}
+	/**
+	 * 获取某年的最后一天是第几周
+	 * @param 年份 去年的年份
+	 * **/
+	public static int  getTheWeekNo(int year){
+		int back=0;
+		Calendar   cal   =   Calendar.getInstance();
+		cal.set(Calendar.YEAR, year);
+		//获取当前年份的天数
+		int num=cal.getActualMaximum(Calendar.DAY_OF_YEAR);
+		System.out.println("获取当前年份的天数=="+num);
+		cal.setTime(stringToDate(cal.get(Calendar.YEAR)+"-01-01","yyyy-MM-dd"));
+		int weekNo=cal.get(Calendar.DAY_OF_WEEK);
+		System.out.println(year+"-01-01==第"+weekNo+"天");
+		if(weekNo>1){
+			if((num-(8-weekNo))%7==0){
+				back=(num-(8-weekNo))/7;
+			}else{
+				back=(num-(8-weekNo))/7+1;
+			}
+		}else{
+			if(num%7==0){
+				back=num/7;
+			}else{
+				back=num/7+1;
+			}
+		}
+		System.out.println("back==="+back);
+		return back;
+	}
+	/**
+	 * 返回当前日期是第几周
+	 * */
+	public static int getTheWeekNumberOfCurDays(int year,int month,int day){
+		int back=0;
+		Calendar   cal   =   Calendar.getInstance();
+		cal.set(Calendar.YEAR, year);
+		//获取当前年份的天数
+		int num=cal.getActualMaximum(Calendar.DAY_OF_YEAR);
+		System.out.println("获取当前年份的天数=="+num);
+		cal.setTime(stringToDate(cal.get(Calendar.YEAR)+"-01-01","yyyy-MM-dd"));
+		int weekNo=cal.get(Calendar.DAY_OF_WEEK);
+		System.out.println(year+"-01-01==第"+weekNo+"天");
+		int curDays=orderDate(year,month,day);
+		System.out.println("当前的天数=="+curDays);
+		if(weekNo>1){
+			if(curDays<=(8-weekNo)){
+				back=0;
+			}else{
+				if((curDays-(8-weekNo))%7==0){
+					back=(curDays-(8-weekNo))/7;
+				}else{
+					back=(curDays-(8-weekNo))/7+1;
+				}
+			}
+		}else{
+			if(curDays%7==0){
+				back=curDays/7;
+			}else{
+				back=curDays/7+1;
+			}
+		}
+		System.out.println("back==="+back);
+		return back;
+	}
+	/**
+	 * 获取当前是改年的第一天
+	 * @param 年
+	 * @param 月
+	 * @param 日
+	 * */
+	public static int orderDate(int year,int month,int day){
+		int dateSum = 0;
+		for(int i = 1; i < month; i++){
+			switch(i){
+			case 1: case 3: case 5: case 7: case 8: case 10: case 12:dateSum += 31; break;
+			case 4: case 6: case 9: case 11:dateSum += 30; break;
+			case 2:
+				if(((year % 4 == 0) & (year % 100 != 0)) | (year % 400 == 0))
+					dateSum += 29;
+				else dateSum += 28;
+			}
+		}
+		return dateSum = dateSum + day;
+	}
+	/**
+	 * 获取当前日期的前一年时间
+	 * */
+	public static List<String []> getAllYearDate(Date date){
+		//	能被4整除但不能被100整除；
+		//    （2）能被400整除。
+		int year=date.getYear()+1900;
+		int k=365;//用于判断当前年的天数
+		//闰年有366天
+		if((year%4==0&&year%100!=0)||year%400==0){
+			k=k+1;
+		}
+		List<String[]> list =new ArrayList<String[]>();
+		String str[]=null;
+		Calendar c=Calendar.getInstance();
+		//c.YEAR
+		for(int i=1;i<=k;i++){
+			str=new String[2];
+			//获取当前日期
+			c.setTime(date);
+			//当前日期减1
+			c.add(Calendar.DATE, -i);
+			Date date1=c.getTime();
+			String s=dateToString(date1);
+			String str1[]=s.split("\\ ");//2011-11-15为第一个
+			str[0]=str1[0]+" 00:00:00";
+			str[1]=str1[0]+" 23:59:59";
+			//	System.out.println(str[0]+"--->"+str[1]);
+			list.add(str);
+		}
+		return list;
+	}
+	/**
+	 * 获取年月日
+	 * */
+	public static String getYMD(String timeStr){
+		if(null==timeStr || "".equals(timeStr)){
+			return null;
+		}
+		String s[]=timeStr.split(" ");
+		String s1[]=s[0].split("-");
+		int m=Integer.parseInt(s1[1]);
+		String month="";
+		if(m<10){
+			month="0"+m;
+		}else{
+			month=m+"";
+		}
+		int d=Integer.parseInt(s1[2]);
+		String day="";
+		if(d<10){
+			day="0"+d;
+		}else{
+			day=d+"";
+		}
+		return s1[0]+"-"+month+"-"+day;
+	}
+	public static String getYMDNotLine(String timeStr){
+		if(null==timeStr || "".equals(timeStr)){
+			return null;
+		}
+		String s[]=timeStr.split(" ");
+		String s1[]=s[0].split("-");
+		int m=Integer.parseInt(s1[1]);
+		String month="";
+		if(m<10){
+			month="0"+m;
+		}else{
+			month=m+"";
+		}
+		int d=Integer.parseInt(s1[2]);
+		String day="";
+		if(d<10){
+			day="0"+d;
+		}else{
+			day=d+"";
+		}
+		return s1[0]+month+day;
+	}
+	public static String getYMDNoLine(String timeStr){
+		String s[]=timeStr.split(" ");
+		String s1[]=s[0].split("-");
+		int m=Integer.parseInt(s1[1]);
+		String month="";
+		if(m<10){
+			month="0"+m;
+		}else{
+			month=m+"";
+		}
+		int d=Integer.parseInt(s1[2]);
+		String day="";
+		if(d<10){
+			day="0"+d;
+		}else{
+			day=d+"";
+		}
+		return s1[0]+month+day;
+	}
+	/**
+	 * 获取时分秒
+	 * 23:00:00
+	 * */
+	public static String getHMS(String timeStr){
+		String s[]=timeStr.split(" ");
+		String s1[]=s[1].split(":");
+		int m=Integer.parseInt(s1[0]);
+		String hour="";
+		if(m<10){
+			hour="0"+m;
+		}else{
+			hour=m+"";
+		}
+		int d=Integer.parseInt(s1[1]);
+		String minite="";
+		if(d<10){
+			minite="0"+d;
+		}else{
+			minite=d+"";
+		}
+		int se=Integer.parseInt(s1[2].split("\\.")[0]);
+		String second="";
+		if(se<10){
+			second="0"+se;
+		}else{
+			second=se+"";
+		}
+		return hour+":"+minite+":"+second;
+	}
+	/**
+	 * 获取分秒
+	 * 59:00
+	 * */
+	public static String getMS(String timeStr){
+		String s[]=timeStr.split(" ");
+		String s1[]=s[1].split(":");
+		int m=Integer.parseInt(s1[0]);
+		String hour="";
+		if(m<10){
+			hour="0"+m;
+		}else{
+			hour=m+"";
+		}
+		int d=Integer.parseInt(s1[1]);
+		String minite="";
+		if(d<10){
+			minite="0"+d;
+		}else{
+			minite=d+"";
+		}
+		int se=Integer.parseInt(s1[2].split("\\.")[0]);
+		String second="";
+		if(se<10){
+			second="0"+se;
+		}else{
+			second=se+"";
+		}
+		return hour+":"+minite+":"+second;
+	}
+	/***
+	 * 根据传入的时间，与数字，返回传进时间的前/后的某一年的年月日
+	 * @param number
+	 * @param c
+	 * @return YYYY-MM_DD
+	 */
+	public static String getYMDbyNum(int number,Calendar c){
+		c.add(Calendar.DATE, number);
+		return getYMD(c.getTime().toLocaleString());
+
+	}
+	//获取前31天的年月日
+	public static String[] getYMDBeforeNumDay(int num){
+		String[] str=new String[num];
+		for(int i=0;i<num;i++){
+			long time = System.currentTimeMillis() - (1000L * 60 * 60 * 24 * (i+1));
+			String pattern = "yyyy-MM-dd";
+			Date date = new Date();
+			if (time > 0) {
+				date.setTime(time);
+			}
+			SimpleDateFormat format = new SimpleDateFormat(pattern);
+			str[i]=format.format(date);
+			System.out.println(str[i]);
+		}
+		return str;
+	}
+	public static String[] getYMDBeforeNumDay1(int num){
+		String[] str=new String[num];
+		for(int i=(num-1),j=0;i>=0;i--){
+			long time = System.currentTimeMillis() - (1000L * 60 * 60 * 24 * (i+1));
+			String pattern = "yyyy-MM-dd";
+			Date date = new Date();
+			if (time > 0) {
+				date.setTime(time);
+			}
+			SimpleDateFormat format = new SimpleDateFormat(pattern);
+			str[j]=format.format(date);
+			j++;
+		}
+		return str;
+	}
+	/****
+	 * 获取当前时间的前多久的时间
+	 * @param beforeTime 分钟
+	 * @return 当前时间与 beforeTime前的时间
+	 */
+	public  static String[] getBeforeMinuteTime(int beforeTime){
+		String [] str=new String[2];
+		Calendar c=Calendar.getInstance();
+		str[1]=c.getTime().toLocaleString();
+		c.add(Calendar.MINUTE, -beforeTime);
+		str[0]=c.getTime().toLocaleString();
+		return str;
+	}
+	/***
+	 * 获取当前时间推后beforeTime*1000秒的时间
+	 * @param startTime
+	 * @param beforeTime
+	 * @return
+	 */
+	public  static Date getBeforeMinuteTime(String startTime ,int beforeTime){
+	    Date d=stringToDate(startTime);
+	    return getBeforeMinuteTime(d,beforeTime);
+	}
+	/***
+	 * 获取当前时间推后beforeTime*1000秒的时间
+	 * @param startTime
+	 * @param beforeTime
+	 * @return
+	 */
+	public  static Date getBeforeMinuteTime(Date startTime ,int beforeTime){
+		return new Date((startTime.getTime()+beforeTime));
+	}
+	//根据传入的起始时间，返回期间的年月日数组
+	public static String[] getYMDArrayByTime(String startTime,String endTime){
+		Date startDate=stringToDate(startTime);
+		Date endDate=stringToDate(endTime);
+		Long start=startDate.getTime();
+		Long end=endDate.getTime();
+		List <String> list=new ArrayList<String>();
+		for(long j=start;j<end;){
+			list.add(getYMD(new Date(j).toLocaleString()));
+			j+=1000L * 60 * 60 * 24;
+		}
+		int size=list.size();
+		String[] str=new String[size];
+		for(int j=0;j<size;j++){
+			str[j]=list.get(j);
+			System.out.println(str[j]);
+		}
+		return str;
+	}
+	/***
+	 * 根据传入的起始时间，返回期间的年月日数组,包含最后一天
+	 * @param startTime
+	 * @param endTime
+	 * @return
+	 */
+	public static String[] getYMDArrayByTime1(String startTime,String endTime){
+		Date startDate=stringToDate(startTime);
+		Date endDate=stringToDate(endTime);
+		Long start=startDate.getTime();
+		Long end=endDate.getTime();
+		List <String> list=new ArrayList<String>();
+		for(long j=start;j<=end;){
+			list.add(getYMD(new Date(j).toLocaleString()));
+			j+=1000L * 60 * 60 * 24;
+		}
+		int size=list.size();
+		String[] str=new String[size];
+		for(int j=0;j<size;j++){
+			str[j]=list.get(j);
+		}
+		return str;
+	}
+	/***
+	 * 根据传入的起始时间，返回期间的年月日数组,不包含最后一天
+	 * @param startTime
+	 * @param endTime
+	 * @return
+	 */
+	public static String[] getYMDArrayByTimeNotNow(String startTime,String endTime){
+		Date startDate=stringToDate(startTime);
+		Date endDate=stringToDate(endTime);
+		Long start=startDate.getTime();
+		Long end=endDate.getTime();
+		List <String> list=new ArrayList<String>();
+		for(long j=start;j<=end;){
+			list.add(getYMD(new Date(j).toLocaleString()));
+			j+=1000L * 60 * 60 * 24;
+		}
+		int size=list.size();
+		size=size-1;
+		String[] str=new String[size];
+		for(int j=0;j<size;j++){
+			str[j]=list.get(j);
+		}
+		return str;
+	}
+
+	/**
+	 * 获取年月日
+	 * 20150202
+	 */
+	public static String getYMD1(String timeStr){
+		String s[]=timeStr.split(" ");
+		String y1[]=s[0].split("-");
+		int y=Integer.parseInt(y1[0]);
+		String year="";
+		year=y+"";
+		int mon=Integer.parseInt(y1[1]);
+		String month="";
+		if(mon<10){
+			month="0"+mon;
+		}else{
+			month=mon+"";
+		}
+		int d=Integer.parseInt(y1[2]);
+		String day;
+		if(d<10){
+			day="0"+d;
+		}else{
+			day=d+"";
+		}
+		return year+month+day;
+	}
+	/**
+	 * 获取时分秒
+	 * 231010
+	 */
+	public static String getHMS1(String timeStr){
+		String s[]=timeStr.split(" ");
+		String s1[]=s[1].split(":");
+		int m=Integer.parseInt(s1[0]);
+		String hour="";
+		if(m<10){
+			hour="0"+m;
+		}else{
+			hour=m+"";
+		}
+		int mi=Integer.parseInt(s1[1]);
+		String minute="";
+		if(mi<10){
+			minute="0"+mi;
+		}else{
+			minute=mi+"";
+		}
+		int se=Integer.parseInt(s1[2].split("\\.")[0]);
+		String second="";
+		if(se<10){
+			second="0"+se;
+		}else{
+			second=se+"";
+		}
+		return hour+minute+second;
+	}
+	/**
+	 * 获取年月日时分秒
+	 * 如：20150202123030
+	 * */
+	public static String getYMDHMS(String timeStr){
+		if(timeStr.indexOf(" ")!=-1){
+			String ymd=getYMD1(timeStr);
+			String hms=getHMS1(timeStr);
+			return ymd+hms;
+		}else {
+			String ymd=getYMD1(timeStr);
+			return ymd+"000000";
+		}
+
+	}
+	public static  String[] getWeekDateByWeek1(int year,int week){
+		Calendar   cal   =   Calendar.getInstance();
+		cal.set(year, 0, 1);
+		String str[]=new String[2];
+		int num=cal.get(Calendar.DAY_OF_WEEK);
+		cal.add(Calendar.DATE, (num+(week)*7)+1);
+		str[1]=cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH)+1) + "-" + cal.get(Calendar.DATE);
+		cal.add(Calendar.DATE, -6);
+		str[0]= cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH)+1) + "-" + cal.get(Calendar.DATE);
+		System.out.println("time is="+str[0]+"--"+str[1]);
+		return str;
+	}
+}

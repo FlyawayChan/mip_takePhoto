@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+						http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"
+	default-lazy-init="true"
+	>
+
+	<!-- UploadDataService定义 -->
+	<bean id="com.mip.biz.oms.nhDataCount.service.NhDataCountService"
+		class="com.mip.biz.oms.nhDataCount.service.impl.NhDataCountServiceImpl"
+		parent="com.mip.core.basebiz.service.BizService"
+		scope="singleton"
+	/>
+
+</beans>
